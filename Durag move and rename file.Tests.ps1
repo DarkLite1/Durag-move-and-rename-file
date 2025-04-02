@@ -14,7 +14,6 @@ BeforeAll {
         Destination                       = @{
             Folder = (New-Item 'TestDrive:/d' -ItemType Directory).FullName
         }
-        ProcessFilesInThePastNumberOfDays = 1
     }
 
     $testOutParams = @{
@@ -110,85 +109,6 @@ Describe 'create an error log file when' {
                 Should -Invoke Out-File -Times 1 -Exactly -ParameterFilter {
                     ($FilePath -like '* - Error.txt') -and
                     ($InputObject -like "*$ImportFile*$_.Folder 'TestDrive:\nonExisting' not found*")
-                }
-            }
-            Context 'ProcessFilesInThePastNumberOfDays' {
-                It 'is not a number' {
-                    $testNewInputFile = Copy-ObjectHC $testInputFile
-                    $testNewInputFile.ProcessFilesInThePastNumberOfDays = 'a'
-
-                    & $realCmdLet.OutFile @testOutParams -InputObject (
-                        $testNewInputFile | ConvertTo-Json -Depth 7
-                    )
-
-                    .$testScript @testParams
-
-                    Should -Invoke Out-File -Times 1 -Exactly -ParameterFilter {
-                        ($FilePath -like '* - Error.txt') -and
-                        ($InputObject -like "*$ImportFile*Property 'ProcessFilesInThePastNumberOfDays' must be 0 or a positive number. Number 0 processes all files in the source folder. The value 'a' is not supported*")
-                    }
-                }
-                It 'is a negative number' {
-                    $testNewInputFile = Copy-ObjectHC $testInputFile
-                    $testNewInputFile.ProcessFilesInThePastNumberOfDays = -1
-
-                    & $realCmdLet.OutFile @testOutParams -InputObject (
-                        $testNewInputFile | ConvertTo-Json -Depth 7
-                    )
-
-                    .$testScript @testParams
-
-                    Should -Invoke Out-File -Times 1 -Exactly -ParameterFilter {
-                        ($FilePath -like '* - Error.txt') -and
-                        ($InputObject -like "*$ImportFile*Property 'ProcessFilesInThePastNumberOfDays' must be 0 or a positive number. Number 0 processes all files in the source folder. The value '-1' is not supported*")
-                    }
-                }
-                It 'is an empty string' {
-                    $testNewInputFile = Copy-ObjectHC $testInputFile
-                    $testNewInputFile.ProcessFilesInThePastNumberOfDays = ''
-
-                    & $realCmdLet.OutFile @testOutParams -InputObject (
-                        $testNewInputFile | ConvertTo-Json -Depth 7
-                    )
-
-                    .$testScript @testParams
-
-                    Should -Invoke Out-File -Times 1 -Exactly -ParameterFilter {
-                        ($FilePath -like '* - Error.txt') -and
-                        ($InputObject -like "*$ImportFile*Property 'ProcessFilesInThePastNumberOfDays' must be 0 or a positive number. Number 0 processes all files in the source folder. The value '' is not supported*")
-                    }
-                }
-                It 'is missing' {
-                    $testNewInputFile = @{
-                        Source      = $testInputFile.Source
-                        Destination = $testInputFile.Destination
-                    }
-
-                    & $realCmdLet.OutFile @testOutParams -InputObject (
-                        $testNewInputFile | ConvertTo-Json -Depth 7
-                    )
-
-                    .$testScript @testParams
-
-                    Should -Invoke Out-File -Times 1 -Exactly -ParameterFilter {
-                        ($FilePath -like '* - Error.txt') -and
-                        ($InputObject -like "*$ImportFile*Property 'ProcessFilesInThePastNumberOfDays' must be 0 or a positive number. Number 0 processes all files in the source folder. The value '' is not supported*")
-                    }
-                }
-                It '0 is accepted' {
-                    $testNewInputFile = Copy-ObjectHC $testInputFile
-                    $testNewInputFile.ProcessFilesInThePastNumberOfDays = '0'
-
-                    & $realCmdLet.OutFile @testOutParams -InputObject (
-                        $testNewInputFile | ConvertTo-Json -Depth 7
-                    )
-
-                    .$testScript @testParams
-
-                    Should -Invoke -Not Out-File -ParameterFilter {
-                        ($FilePath -like '* - Error.txt') -and
-                        ($InputObject -like "*ProcessFilesInThePastNumberOfDays*")
-                    }
                 }
             }
         }

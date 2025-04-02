@@ -25,14 +25,6 @@
     .PARAMETER DestinationFolder
         The destination folder.
 
-    .PARAMETER ProcessFilesInThePastNumberOfDays
-        Number of days in the past for which to process files.
-
-        Example:
-        - 0 : Process all files in the source folder, no filter
-        - 1 : Process files created since yesterday morning
-        - 5 : Process files created in the last 5 days
-
     .PARAMETER LogFolder
         The folder where the error log files will be saved.
 #>
@@ -101,23 +93,6 @@ begin {
             ).foreach(
                 { throw "Property 'Destination.$_' not found" }
             )
-
-            #region Test integer value
-            try {
-                if ($jsonFileContent.ProcessFilesInThePastNumberOfDays -eq '') {
-                    throw 'a blank string is not supported'
-                }
-
-                [int]$ProcessFilesInThePastNumberOfDays = $jsonFileContent.ProcessFilesInThePastNumberOfDays
-
-                if ($jsonFileContent.ProcessFilesInThePastNumberOfDays -lt 0) {
-                    throw 'a negative number is not supported'
-                }
-            }
-            catch {
-                throw "Property 'ProcessFilesInThePastNumberOfDays' must be 0 or a positive number. Number 0 processes all files in the source folder. The value '$($jsonFileContent.ProcessFilesInThePastNumberOfDays)' is not supported."
-            }
-            #endregion
             #endregion
 
             #region Test folders exist

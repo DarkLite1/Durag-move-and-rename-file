@@ -151,6 +151,10 @@ process {
                 Write-Verbose "Processing file '$($file.FullName)'"
 
                 #region Create new file name
+                if ($file.Name -notmatch '^\w+_(\d{2})(\d{2})(\d{4})\.\w+$') {
+                    throw "Filename '$($file.Name)' does not match expected pattern 'Prefix_ddMMyyyy.ext'."
+                }
+
                 $year = $file.Name.Substring(12, 4)
                 $month = $file.Name.Substring(10, 2)
                 $day = $file.Name.Substring(8, 2)
@@ -218,4 +222,8 @@ process {
         Write-Warning $_
         "Failure:`r`n`r`n- $_" | Out-File -FilePath $logFile -Append
     }
+}
+
+end {
+
 }

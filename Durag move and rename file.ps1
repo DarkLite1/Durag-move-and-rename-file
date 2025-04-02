@@ -9,20 +9,24 @@
         This script selects all files in the source folder that match the
         'MatchFileNameRegex'.
 
-        The selected files are copied from the source folder to the destination
+        The selected files are moved from the source folder to the destination
         folder with a new name. The new name is based on the date string
         available withing the source file name.
+
+        Example file:
+        - source      : 'Source.Folder\Analyse_26032025.xlsx'
+        - destination : 'Destination.Folder\2025\AnalysesJour_20250326.xlsx'
 
     .PARAMETER ImportFile
         A .JSON file that contains all the parameters used by the script.
 
-    .PARAMETER SourceFolder
+    .PARAMETER Source.Folder
         The source folder.
 
-    .PARAMETER MatchFileNameRegex
+    .PARAMETER Source.MatchFileNameRegex
         Only files that match the regex will be copied.
 
-    .PARAMETER DestinationFolder
+    .PARAMETER Destination.Folder
         The destination folder.
 
     .PARAMETER LogFolder

@@ -170,17 +170,17 @@ process {
                         Path      = $DestinationFolder
                         ChildPath = $year
                     }
-                    $destinationFolder = Join-Path @params
+                    $yearDestinationFolder = Join-Path @params
 
-                    Write-Verbose "Destination folder '$destinationFolder'"
+                    Write-Verbose "Destination folder '$yearDestinationFolder'"
 
                     $params = @{
-                        LiteralPath = $destinationFolder
+                        LiteralPath = $yearDestinationFolder
                         PathType    = 'Container'
                     }
                     if (-not (Test-Path @params)) {
                         $params = @{
-                            Path     = $destinationFolder
+                            Path     = $yearDestinationFolder
                             ItemType = 'Directory'
                             Force    = $true
                         }
@@ -191,7 +191,7 @@ process {
                     }
                 }
                 catch {
-                    throw "Failed to create destination folder '$destinationFolder': $_"
+                    throw "Failed to create destination folder '$yearDestinationFolder': $_"
                 }
                 #endregion
 
@@ -199,7 +199,7 @@ process {
                 try {
                     $params = @{
                         LiteralPath = $file.FullName
-                        Destination = "$($destinationFolder)\$newFileName"
+                        Destination = "$($yearDestinationFolder)\$newFileName"
                         Force       = $true
                     }
 

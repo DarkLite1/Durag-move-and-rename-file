@@ -1,0 +1,9 @@
+{
+  "Source": {
+    "Folder": "C:\\folderA",
+    "MatchFileNameRegex": "Analyse_[0-9]{8}.xlsx"
+  },
+  "Destination": {
+    "Folder": "C:\\folderB"
+  }
+}

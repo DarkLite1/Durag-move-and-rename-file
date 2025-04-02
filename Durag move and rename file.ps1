@@ -129,7 +129,6 @@ process {
 
         $params = @{
             LiteralPath = $SourceFolder
-            Recurse     = $true
             File        = $true
         }
         $filesToProcess = @(Get-ChildItem @params | Where-Object {

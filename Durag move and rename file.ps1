@@ -242,24 +242,20 @@ end {
         }
         #endregion
 
-        #region Get log folder
-        try {
-            if (-not $logFolder) {
-                Write-Verbose 'No log folder found in import file'
-            }
-            elseif (-not [System.IO.Path]::IsPathRooted($logFolder)) {
-                $logFolder = Resolve-Path -Path (
-                    Join-Path -Path $PSScriptRoot -ChildPath $logFolder
-                ) -ErrorAction Stop
-            }
-        }
-        catch {
-            $terminatingError = "Failed to resolve log folder: $_"
-        }
-
-        #endregion
-
         if ($logFolder) {
+            #region Get log folder
+            try {
+                if (-not [System.IO.Path]::IsPathRooted($logFolder)) {
+                    $logFolder = Resolve-Path -Path (
+                        Join-Path -Path $PSScriptRoot -ChildPath $logFolder
+                    ) -ErrorAction Stop
+                }
+            }
+            catch {
+                throw "Failed to resolve log folder: $_"
+            }
+            #endregion
+
             #region Create log folder
             try {
                 $logFolderItem = New-Item -Path $LogFolder -ItemType 'Directory' -Force -EA Stop
@@ -313,10 +309,6 @@ end {
             #endregion
         }
 
-        #region Send email
-
-        #endregion
-
         #region Write events to event log
         if ($logToEventLog) {
 
@@ -327,6 +319,10 @@ end {
         $terminatingError = $_
     }
     finally {
+        #region Send email
+
+        #endregion
+
         if ($terminatingError) {
             Write-Warning $terminatingError
             exit 1

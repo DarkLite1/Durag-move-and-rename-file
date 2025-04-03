@@ -57,7 +57,7 @@ param (
 begin {
     $ErrorActionPreference = 'stop'
 
-    $terminatingError = $null
+    $terminatingErrors = @()
     $logFileData = [System.Collections.Generic.List[PSObject]]::new()
     $scriptStartTime = Get-Date
 
@@ -108,13 +108,13 @@ begin {
         #endregion
     }
     catch {
-        $terminatingError = "Input file '$ImportFile': $_"
+        $terminatingErrors += "Input file '$ImportFile': $_"
         return
     }
 }
 
 process {
-    if ($terminatingError) { return }
+    if ($terminatingErrors) { return }
 
     try {
         #region Get files from source folder
@@ -223,7 +223,7 @@ process {
         }
     }
     catch {
-        $terminatingError = $_
+        $terminatingErrors += $_
         return
     }
 }
@@ -243,70 +243,116 @@ end {
         #endregion
 
         if ($logFolder) {
-            #region Get log folder
             try {
-                if (-not [System.IO.Path]::IsPathRooted($logFolder)) {
-                    $logFolder = Resolve-Path -Path (
-                        Join-Path -Path $PSScriptRoot -ChildPath $logFolder
-                    ) -ErrorAction Stop
-                }
-            }
-            catch {
-                throw "Failed to resolve log folder: $_"
-            }
-            #endregion
-
-            #region Create log folder
-            try {
-                $logFolderItem = New-Item -Path $LogFolder -ItemType 'Directory' -Force -EA Stop
-
-                $baseLogName = Join-Path -Path $logFolderItem.FullName -ChildPath (
-                    '{0} - {1}' -f $scriptStartTime.ToString('yyyy_MM_dd_HHmmss_dddd'), $ScriptName
-                )
-            }
-            catch {
-                $terminatingError = "Failed creating log folder '$LogFolder': $_"
-            }
-            #endregion
-
-            #region Create log file
-            if (-not $terminatingError) {
-                $logFile = '{0} - Log{1}' -f $baseLogName, $logFileExtension
-                Write-Verbose "Export data to '$logFile'"
-
-                switch ($logFileExtension) {
-                    '.txt' {
-                        $logFileData | Out-File -LiteralPath $logFile
-                        break
-                    }
-                    '.csv' {
-                        $params = @{
-                            LiteralPath       = $logFile
-                            Delimiter         = ';'
-                            NoTypeInformation = $true
-                        }
-                        $logFileData | Export-Csv @params
-                        break
-                    }
-                    '.xlsx' {
-                        $excelParams = @{
-                            Path          = $logFile
-                            AutoNameRange = $true
-                            AutoSize      = $true
-                            FreezeTopRow  = $true
-                            WorksheetName = 'Overview'
-                            TableName     = 'Overview'
-                            Verbose       = $false
-                        }
-                        $logFileData | Export-Excel @excelParams
-                        break
-                    }
-                    default {
-                        $terminatingError = "Log file extension '$_' not supported. Supported values are '.xlsx', '.txt', '.csv' or NULL."
+                #region Get log folder
+                try {
+                    if (-not [System.IO.Path]::IsPathRooted($logFolder)) {
+                        $logFolder = Resolve-Path -Path (
+                            Join-Path -Path $PSScriptRoot -ChildPath $logFolder
+                        ) -ErrorAction Stop
                     }
                 }
+                catch {
+                    throw "Failed to resolve log folder: $_"
+                }
+                #endregion
+
+                #region Create log folder
+                try {
+                    $logFolderItem = New-Item -Path $LogFolder -ItemType 'Directory' -Force -EA Stop
+
+                    $baseLogName = Join-Path -Path $logFolderItem.FullName -ChildPath (
+                        '{0} - {1}' -f $scriptStartTime.ToString('yyyy_MM_dd_HHmmss_dddd'), $ScriptName
+                    )
+                }
+                catch {
+                    throw "Failed creating log folder '$LogFolder': $_"
+                }
+                #endregion
+
+                #region Create log file
+                $logFileTemplate = "$baseLogName - {0}$logFileExtension"
+                $dataLogFilePath = $logFileTemplate -f 'log'
+                $errorLogFilePath = $logFileTemplate -f 'error'
+
+                if ($logFileData) {
+                    Write-Verbose "Export data to '$dataLogFilePath'"
+
+                    switch ($logFileExtension) {
+                        '.txt' {
+                            $logFileData |
+                            Out-File -LiteralPath $dataLogFilePath
+                            break
+                        }
+                        '.csv' {
+                            $params = @{
+                                LiteralPath       = $dataLogFilePath
+                                Delimiter         = ';'
+                                NoTypeInformation = $true
+                            }
+                            $logFileData | Export-Csv @params
+                            break
+                        }
+                        '.xlsx' {
+                            $excelParams = @{
+                                Path          = $dataLogFilePath
+                                AutoNameRange = $true
+                                AutoSize      = $true
+                                FreezeTopRow  = $true
+                                WorksheetName = 'Overview'
+                                TableName     = 'Overview'
+                                Verbose       = $false
+                            }
+                            $logFileData | Export-Excel @excelParams
+                            break
+                        }
+                        default {
+                            throw "Log file extension '$_' not supported. Supported values are '.xlsx', '.txt', '.csv' or NULL."
+                        }
+                    }
+                }
+
+                if ($terminatingErrors) {
+                    Write-Verbose "Export errors to '$errorLogFilePath'"
+
+                    switch ($logFileExtension) {
+                        '.txt' {
+                            $terminatingErrors |
+                            Out-File -LiteralPath $errorLogFilePath
+                            break
+                        }
+                        '.csv' {
+                            $params = @{
+                                LiteralPath       = $errorLogFilePath
+                                Delimiter         = ';'
+                                NoTypeInformation = $true
+                            }
+                            $terminatingErrors | Export-Csv @params
+                            break
+                        }
+                        '.xlsx' {
+                            $excelParams = @{
+                                Path          = $errorLogFilePath
+                                AutoNameRange = $true
+                                AutoSize      = $true
+                                FreezeTopRow  = $true
+                                WorksheetName = 'Overview'
+                                TableName     = 'Overview'
+                                Verbose       = $false
+                            }
+                            $terminatingErrors | Export-Excel @excelParams
+                            break
+                        }
+                        default {
+                            throw "Log file extension '$_' not supported. Supported values are '.xlsx', '.txt', '.csv' or NULL."
+                        }
+                    }
+                }
+                #endregion
             }
-            #endregion
+            catch {
+                $terminatingErrors += "Failed creating log file in folder '$($jsonFileContent.Settings.Log.Folder)': $_"
+            }
         }
 
         #region Write events to event log
@@ -316,15 +362,15 @@ end {
         #endregion
     }
     catch {
-        $terminatingError = $_
+        $terminatingErrors += $_
     }
     finally {
         #region Send email
 
         #endregion
 
-        if ($terminatingError) {
-            Write-Warning $terminatingError
+        if ($terminatingErrors) {
+            Write-Warning $terminatingErrors
             exit 1
         }
     }

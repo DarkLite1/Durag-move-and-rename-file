@@ -108,7 +108,10 @@ begin {
         #endregion
     }
     catch {
-        $terminatingErrors += "Input file '$ImportFile': $_"
+        $terminatingErrors += [PSCustomObject]@{
+            DateTime = Get-Date
+            Message  = "Input file '$ImportFile': $_"
+        }
         return
     }
 }
@@ -223,7 +226,10 @@ process {
         }
     }
     catch {
-        $terminatingErrors += $_
+        $terminatingErrors += [PSCustomObject]@{
+            DateTime = Get-Date
+            Message  = $_
+        }
         return
     }
 }
@@ -351,7 +357,10 @@ end {
                 #endregion
             }
             catch {
-                $terminatingErrors += "Failed creating log file in folder '$($jsonFileContent.Settings.Log.Folder)': $_"
+                $terminatingErrors += [PSCustomObject]@{
+                    DateTime = Get-Date
+                    Message  = "Failed creating log file in folder '$($jsonFileContent.Settings.Log.Folder)': $_"
+                }
             }
         }
 
@@ -362,7 +371,10 @@ end {
         #endregion
     }
     catch {
-        $terminatingErrors += $_
+        $terminatingErrors += [PSCustomObject]@{
+            DateTime = Get-Date
+            Message  = $_
+        }
     }
     finally {
         #region Send email

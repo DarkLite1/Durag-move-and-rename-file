@@ -43,29 +43,33 @@ param (
 
 begin {
     $ErrorActionPreference = 'stop'
+    $reportData = [System.Collections.Generic.List[PSObject]]::new()
 
     try {
-        $ScriptStartTime = Get-Date
+        $scriptStartTime = Get-Date
 
         #region Create log folder
         try {
-            $logParams = @{
-                LogFolder    = New-Item -Path $LogFolder -ItemType 'Directory' -Force -EA Stop
-                Name         = $ScriptName
-                Date         = 'ScriptStartTime'
-                NoFormatting = $true
-            }
-            $logFile = '{0} - Error.txt' -f (New-LogFileNameHC @LogParams)
+            $logFolderItem = New-Item -Path $LogFolder -ItemType 'Directory' -Force -EA Stop
+
+            $baseLogName = Join-Path -Path $logFolderItem.FullName -ChildPath (
+                '{0} - {1}' -f $scriptStartTime.ToString('yyyy_MM_dd_HHmmss_dddd'), $ScriptName
+            )
+
+            $logFile = '{0} - Error.txt' -f $baseLogName
         }
         catch {
-            Write-Warning $_
+            Write-Warning "Failed creating the log folder '$LogFolder': $_"
 
-            $params = @{
-                FilePath = "$PSScriptRoot\..\Error.txt"
+            try {
+                "Failed creating the log folder '$LogFolder': $_" |
+                Out-File -FilePath "$PSScriptRoot\..\Error.txt"
             }
-            "Failure:`r`n`r`n- Failed creating the log folder '$LogFolder': $_" | Out-File @params
+            catch {
+                Write-Warning "Failed creating fallback error file: $_"
+            }
 
-            exit
+            exit 1
         }
         #endregion
 

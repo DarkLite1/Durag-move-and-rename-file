@@ -8,15 +8,19 @@
   },
   "Settings": {
     "ScriptName": "Durag move and rename file",
-    "LogFolder": "..\\Logs",
-    "LogFileExtension": ".xlsx",
-    "LogToEventLog": false
+    "Log": {
+      "Folder": "..\\Logs",
+      "FileExtension": ".xlsx",
+      "ToEventLog": false
+    }
   },
   "?": {
     "Settings": {
-      "LogFolder": "Value '..\\Logs' : Path relative to the script. Value 'C:\\MyApp\\Logs' : An absolute path. Value NULL : Create no log file.",
-      "LogFileExtension": "Value '.xlsx' : Create an Excel log file. Value '.txt' : Create a text log file. Value '.csv' : Create a comma separated log file. The value is ignored when LogFolder is NULL.",
-      "LogToEventLog": "Value TRUE : Log verbose to event log. Value FALSE : Do not log messages to the event log."
+      "Log": {
+        "Folder": "Value '..\\Logs' : Path relative to the script. Value 'C:\\MyApp\\Logs' : An absolute path. Value NULL : Create no log file.",
+        "FileExtension": "Value '.xlsx' : Create an Excel log file. Value '.txt' : Create a text log file. Value '.csv' : Create a comma separated log file. The value is ignored when LogFolder is NULL.",
+        "ToEventLog": "Value TRUE : Log verbose to event log. Value FALSE : Do not log messages to the event log."
+      }
     }
   }
 }

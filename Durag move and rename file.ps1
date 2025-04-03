@@ -230,9 +230,9 @@ process {
 
 end {
     $scriptName = $jsonFileContent.Settings.ScriptName
-    $logFolder = $jsonFileContent.Settings.LogFolder
-    $logFileExtension = $jsonFileContent.Settings.LogFileExtension
-    $logToEventLog = $jsonFileContent.Settings.LogToEventLog
+    $logFolder = $jsonFileContent.Settings.Log.Folder
+    $logFileExtension = $jsonFileContent.Settings.Log.FileExtension
+    $logToEventLog = $jsonFileContent.Settings.Log.ToEventLog
 
     #region Get script name
     if (-not $scriptName) {

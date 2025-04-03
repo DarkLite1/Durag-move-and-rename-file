@@ -29,15 +29,29 @@
         The destination folder.
 
     .PARAMETER LogFolder
-        The folder where the error log files will be saved.
+        The folder where the log files will be saved.
+
+        Example:
+        - Value '..\\Logs'        : Path relative to the script.
+        - Value 'C:\\MyApp\\Logs' : An absolute path.
+        - Value NULL              : Create no log file.
+
+    .PARAMETER LogFileExtension
+        The value is ignored when LogFolder is NULL.
+
+        - Value '.xlsx' : Create an Excel log file.
+        - Value '.txt'  : Create a text log file.
+        - Value '.csv'  : Create a comma separated log file
+
+    .PARAMETER LogToEventLog
+        - Value TRUE : Log verbose to event log.
+        - Value FALSE : Do not log messages to the event log.
 #>
 
 [CmdLetBinding()]
 param (
     [Parameter(Mandatory)]
-    [string]$ImportFile,
-    [string]$ScriptName = 'Process computer actions',
-    [string]$LogFolder = "$PSScriptRoot\..\Log"
+    [string]$ImportFile
 )
 
 begin {
@@ -45,79 +59,56 @@ begin {
 
     $terminatingError = $null
     $logFileData = [System.Collections.Generic.List[PSObject]]::new()
+    $scriptStartTime = Get-Date
 
     try {
-        $scriptStartTime = Get-Date
+        #region Import .json file
+        Write-Verbose "Import .json file '$ImportFile'"
 
-        #region Create log folder
-        try {
-            $logFolderItem = New-Item -Path $LogFolder -ItemType 'Directory' -Force -EA Stop
-
-            $baseLogName = Join-Path -Path $logFolderItem.FullName -ChildPath (
-                '{0} - {1}' -f $scriptStartTime.ToString('yyyy_MM_dd_HHmmss_dddd'), $ScriptName
-            )
-
-            $logFile = '{0} - Error.txt' -f $baseLogName
-        }
-        catch {
-            $terminatingError = "Failed creating log folder '$LogFolder': $_"
-            return
-        }
+        $jsonFileContent = Get-Content $ImportFile -Raw -Encoding UTF8 |
+        ConvertFrom-Json
         #endregion
 
-        try {
-            #region Import .json file
-            Write-Verbose "Import .json file '$ImportFile'"
+        $SourceFolder = $jsonFileContent.Source.Folder
+        $MatchFileNameRegex = $jsonFileContent.Source.MatchFileNameRegex
+        $DestinationFolder = $jsonFileContent.Destination.Folder
 
-            $jsonFileContent = Get-Content $ImportFile -Raw -Encoding UTF8 |
-            ConvertFrom-Json
-            #endregion
+        #region Test .json file properties
+        @(
+            'Folder', 'MatchFileNameRegex'
+        ).where(
+            { -not $jsonFileContent.Source.$_ }
+        ).foreach(
+            { throw "Property 'Source.$_' not found" }
+        )
 
-            $SourceFolder = $jsonFileContent.Source.Folder
-            $MatchFileNameRegex = $jsonFileContent.Source.MatchFileNameRegex
-            $DestinationFolder = $jsonFileContent.Destination.Folder
+        @(
+            'Folder'
+        ).where(
+            { -not $jsonFileContent.Destination.$_ }
+        ).foreach(
+            { throw "Property 'Destination.$_' not found" }
+        )
+        #endregion
 
-            #region Test .json file properties
-            @(
-                'Folder', 'MatchFileNameRegex'
-            ).where(
-                { -not $jsonFileContent.Source.$_ }
-            ).foreach(
-                { throw "Property 'Source.$_' not found" }
-            )
+        #region Test folders exist
+        @{
+            'Source.Folder'      = $SourceFolder
+            'Destination.Folder' = $DestinationFolder
+        }.GetEnumerator().ForEach(
+            {
+                $key = $_.Key
+                $value = $_.Value
 
-            @(
-                'Folder'
-            ).where(
-                { -not $jsonFileContent.Destination.$_ }
-            ).foreach(
-                { throw "Property 'Destination.$_' not found" }
-            )
-            #endregion
-
-            #region Test folders exist
-            @{
-                'Source.Folder'      = $SourceFolder
-                'Destination.Folder' = $DestinationFolder
-            }.GetEnumerator().ForEach(
-                {
-                    $key = $_.Key
-                    $value = $_.Value
-
-                    if (!(Test-Path -LiteralPath $value -PathType Container)) {
-                        throw "$key '$value' not found"
-                    }
+                if (!(Test-Path -LiteralPath $value -PathType Container)) {
+                    throw "$key '$value' not found"
                 }
-            )
-            #endregion
-        }
-        catch {
-            $terminatingError = "Input file '$ImportFile': $_"
-            return
-        }
+            }
+        )
+        #endregion
     }
     catch {
-        $terminatingError = $_
+        $terminatingError = "Input file '$ImportFile': $_"
         return
     }
 }
@@ -148,7 +139,7 @@ process {
             try {
                 Write-Verbose "Processing file '$($file.FullName)'"
 
-                $result = @{
+                $result = [PSCustomObject]@{
                     DateTime          = Get-Date
                     SourceFolder      = $SourceFolder
                     SourceFileName    = $file.Name
@@ -238,26 +229,99 @@ process {
 }
 
 end {
-    #region Write events to event log
+    $scriptName = $jsonFileContent.Settings.ScriptName
+    $logFolder = $jsonFileContent.Settings.LogFolder
+    $logFileExtension = $jsonFileContent.Settings.LogFileExtension
+    $logToEventLog = $jsonFileContent.Settings.LogToEventLog
 
+    #region Get script name
+    if (-not $scriptName) {
+        Write-Warning "ScriptName not found in import file, using default."
+        $scriptName = 'Default script name'
+    }
     #endregion
 
-    #region Create log files .csv or .xlsx
-    Write-Warning $_
-    "Failure:`r`n`r`n- $_" | Out-File -FilePath $logFile -Append
-
+    #region Get log folder
     try {
-        "Failed creating the log folder '$LogFolder': $_" |
-        Out-File -FilePath "$PSScriptRoot\..\Error.txt"
+        if (-not $logFolder) {
+            Write-Verbose 'No log folder found in import file'
+        }
+        elseif (-not [System.IO.Path]::IsPathRooted($logFolder)) {
+            $logFolder = Resolve-Path -Path (
+                Join-Path -Path $PSScriptRoot -ChildPath $logFolder
+            ) -ErrorAction Stop
+        }
     }
     catch {
-        Write-Warning "Failed creating fallback error file: $_"
+        $terminatingError = "Failed to resolve log folder: $_"
     }
 
     #endregion
+
+    if ($logFolder) {
+        #region Create log folder
+        try {
+            $logFolderItem = New-Item -Path $LogFolder -ItemType 'Directory' -Force -EA Stop
+
+            $baseLogName = Join-Path -Path $logFolderItem.FullName -ChildPath (
+                '{0} - {1}' -f $scriptStartTime.ToString('yyyy_MM_dd_HHmmss_dddd'), $ScriptName
+            )
+        }
+        catch {
+            $terminatingError = "Failed creating log folder '$LogFolder': $_"
+        }
+        #endregion
+
+        #region Create log file
+        if (-not $terminatingError) {
+            $logFile = '{0} - Log{1}' -f $baseLogName, $logFileExtension
+            Write-Verbose "Export data to '$logFile'"
+
+            switch ($logFileExtension) {
+                '.txt' {
+                    $logFileData | Out-File -LiteralPath $logFile
+                    break
+                }
+                '.csv' {
+                    $params = @{
+                        LiteralPath       = $logFile
+                        Delimiter         = ';'
+                        NoTypeInformation = $true
+                    }
+                    $logFileData | Export-Csv @params
+                    break
+                }
+                '.xlsx' {
+                    $excelParams = @{
+                        Path          = $logFile
+                        AutoNameRange = $true
+                        AutoSize      = $true
+                        FreezeTopRow  = $true
+                        WorksheetName = 'Overview'
+                        TableName     = 'Overview'
+                        Verbose       = $false
+                    }
+                    $logFileData | Export-Excel @excelParams
+                    break
+                }
+                default {
+                    $terminatingError = "Log file extension '$_' not supported. Supported values are '.xlsx', '.txt', '.csv' or NULL."
+                }
+            }
+            #endregion
+        }
+    }
+
+
 
     #region Send email
 
+    #endregion
+
+    #region Write events to event log
+    if ($logToEventLog) {
+
+    }
     #endregion
 
     if ($terminatingError) {

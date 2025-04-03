@@ -110,7 +110,7 @@ begin {
     catch {
         $terminatingErrors += [PSCustomObject]@{
             DateTime = Get-Date
-            Message  = "Input file '$ImportFile': $_"
+            Error    = "Input file '$ImportFile': $_"
         }
         return
     }
@@ -228,7 +228,7 @@ process {
     catch {
         $terminatingErrors += [PSCustomObject]@{
             DateTime = Get-Date
-            Message  = $_
+            Error    = $_
         }
         return
     }
@@ -359,7 +359,7 @@ end {
             catch {
                 $terminatingErrors += [PSCustomObject]@{
                     DateTime = Get-Date
-                    Message  = "Failed creating log file in folder '$($jsonFileContent.Settings.Log.Folder)': $_"
+                    Error    = "Failed creating log file in folder '$($jsonFileContent.Settings.Log.Folder)': $_"
                 }
             }
         }
@@ -373,7 +373,7 @@ end {
     catch {
         $terminatingErrors += [PSCustomObject]@{
             DateTime = Get-Date
-            Message  = $_
+            Error    = $_
         }
     }
     finally {

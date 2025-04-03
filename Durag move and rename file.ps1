@@ -2,16 +2,15 @@
 
 <#
     .SYNOPSIS
-        Move files from the source folder to the destination folder with a new
-        name.
+        Move files from the source folder to a year folder in the destination folder and rename the file.
 
     .DESCRIPTION
         This script selects all files in the source folder that match the
         'MatchFileNameRegex'.
 
-        The selected files are moved from the source folder to the destination
-        folder with a new name. The new name is based on the date string
-        available withing the source file name.
+        For each selected file the script determines the correct destination
+        year destination folder based on the date string in the file name. The
+        script also renames the file based on the date string in the file name.
 
         Example file:
         - source      : 'Source.Folder\Analyse_26032025.xlsx'
@@ -43,7 +42,9 @@ param (
 
 begin {
     $ErrorActionPreference = 'stop'
-    $reportData = [System.Collections.Generic.List[PSObject]]::new()
+
+    $terminatingError = $null
+    $logFileData = [System.Collections.Generic.List[PSObject]]::new()
 
     try {
         $scriptStartTime = Get-Date
@@ -59,17 +60,8 @@ begin {
             $logFile = '{0} - Error.txt' -f $baseLogName
         }
         catch {
-            Write-Warning "Failed creating the log folder '$LogFolder': $_"
-
-            try {
-                "Failed creating the log folder '$LogFolder': $_" |
-                Out-File -FilePath "$PSScriptRoot\..\Error.txt"
-            }
-            catch {
-                Write-Warning "Failed creating fallback error file: $_"
-            }
-
-            exit 1
+            $terminatingError = "Failed creating log folder '$LogFolder': $_"
+            return
         }
         #endregion
 
@@ -120,17 +112,19 @@ begin {
             #endregion
         }
         catch {
-            throw "Input file '$ImportFile': $_"
+            $terminatingError = "Input file '$ImportFile': $_"
+            return
         }
     }
     catch {
-        Write-Warning $_
-        "Failure:`r`n`r`n- $_" | Out-File -FilePath $logFile -Append
-        exit
+        $terminatingError = $_
+        return
     }
 }
 
 process {
+    if ($terminatingError) { return }
+
     try {
         #region Get files from source folder
         Write-Verbose "Get files in source folder '$SourceFolder'"
@@ -154,6 +148,16 @@ process {
             try {
                 Write-Verbose "Processing file '$($file.FullName)'"
 
+                $result = @{
+                    DateTime          = Get-Date
+                    SourceFolder      = $SourceFolder
+                    SourceFileName    = $file.Name
+                    NewFileName       = $null
+                    DestinationFolder = $null
+                    Moved             = $false
+                    Error             = $null
+                }
+
                 #region Create new file name
                 if ($file.Name -notmatch '^\w+_(\d{2})(\d{2})(\d{4})\.\w+$') {
                     throw "Filename '$($file.Name)' does not match expected pattern 'Prefix_ddMMyyyy.ext'."
@@ -163,9 +167,9 @@ process {
                 $month = $file.Name.Substring(10, 2)
                 $day = $file.Name.Substring(8, 2)
 
-                $newFileName = "AnalysesJour_$($year)$($month)$($day).xlsx"
+                $result.NewFileName = "AnalysesJour_$($year)$($month)$($day).xlsx"
 
-                Write-Verbose "New file name '$newFileName'"
+                Write-Verbose "New file name '$($result.NewFileName)'"
                 #endregion
 
                 #region Create destination folder
@@ -174,17 +178,17 @@ process {
                         Path      = $DestinationFolder
                         ChildPath = $year
                     }
-                    $yearDestinationFolder = Join-Path @params
+                    $result.DestinationFolder = Join-Path @params
 
-                    Write-Verbose "Destination folder '$yearDestinationFolder'"
+                    Write-Verbose "Destination folder '$($result.DestinationFolder)'"
 
                     $params = @{
-                        LiteralPath = $yearDestinationFolder
+                        LiteralPath = $result.DestinationFolder
                         PathType    = 'Container'
                     }
                     if (-not (Test-Path @params)) {
                         $params = @{
-                            Path     = $yearDestinationFolder
+                            Path     = $result.DestinationFolder
                             ItemType = 'Directory'
                             Force    = $true
                         }
@@ -195,39 +199,69 @@ process {
                     }
                 }
                 catch {
-                    throw "Failed to create destination folder '$yearDestinationFolder': $_"
+                    throw "Failed to create destination folder '$($result.DestinationFolder)': $_"
                 }
                 #endregion
 
-                #region Copy file to destination folder
+                #region Move file to destination folder
                 try {
                     $params = @{
                         LiteralPath = $file.FullName
-                        Destination = "$($yearDestinationFolder)\$newFileName"
+                        Destination = "$($result.DestinationFolder)\$($result.NewFileName)"
                         Force       = $true
                     }
 
-                    Write-Verbose "Copy file '$($params.LiteralPath)' to '$($params.Destination)'"
+                    Write-Verbose "Move file '$($params.LiteralPath)' to '$($params.Destination)'"
 
-                    Copy-Item @params
+                    Move-Item @params
                 }
                 catch {
-                    throw "Failed to copy file '$($params.LiteralPath)' to '$($params.Destination)': $_"
+                    throw "Failed to move file '$($params.LiteralPath)' to '$($params.Destination)': $_"
                 }
                 #endregion
+
+                $result.Moved = $true
             }
             catch {
                 Write-Warning $_
-                "Failure for source file '$($file.FullName)':`r`n`r`n- $_" | Out-File -FilePath $logFile -Append
+                $result.Error = $_
+            }
+            finally {
+                $logFileData.Add($result)
             }
         }
     }
     catch {
-        Write-Warning $_
-        "Failure:`r`n`r`n- $_" | Out-File -FilePath $logFile -Append
+        $terminatingError = $_
+        return
     }
 }
 
 end {
+    #region Write events to event log
 
+    #endregion
+
+    #region Create log files .csv or .xlsx
+    Write-Warning $_
+    "Failure:`r`n`r`n- $_" | Out-File -FilePath $logFile -Append
+
+    try {
+        "Failed creating the log folder '$LogFolder': $_" |
+        Out-File -FilePath "$PSScriptRoot\..\Error.txt"
+    }
+    catch {
+        Write-Warning "Failed creating fallback error file: $_"
+    }
+
+    #endregion
+
+    #region Send email
+
+    #endregion
+
+    if ($terminatingError) {
+        Write-Warning $terminatingError
+        exit 1
+    }
 }

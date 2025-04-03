@@ -147,9 +147,9 @@ Describe 'when there is a file in the source folder' {
         Should -Not -BeNullOrEmpty
     }
 }
-Describe 'when a file fails to copy' {
+Describe 'when a file fails to move' {
     BeforeAll {
-        Mock Copy-Item {
+        Mock Move-Item {
             throw 'Oops'
         }
 
@@ -169,7 +169,7 @@ Describe 'when a file fails to copy' {
     It 'an error log file is created' {
         Should -Invoke Out-File -Times 1 -Exactly -Scope Describe -ParameterFilter {
             ($FilePath -like '* - Error.txt') -and
-            ($InputObject -like "*Failure for source file*Failed to copy file '$($testFile.FullName)'*")
+            ($InputObject -like "*Failure for source file*Failed to move file '$($testFile.FullName)'*")
         }
     }
 }

@@ -237,12 +237,12 @@ process {
 end {
     try {
         $scriptName = $jsonFileContent.Settings.ScriptName
-        $logFolder = $jsonFileContent.Settings.Log.Folder
-        $logFileExtension = $jsonFileContent.Settings.Log.FileExtension
-        $logToEventLog = $jsonFileContent.Settings.Log.ToEventLog
-        $logSystemErrors = $jsonFileContent.Settings.Log.SystemErrors
-        $logAllActions = $jsonFileContent.Settings.Log.AllActions
-        $logOnlyActionErrors = $jsonFileContent.Settings.Log.OnlyActionErrors
+        $logFolder = $jsonFileContent.Settings.Log.Where.Folder
+        $logFileExtension = $jsonFileContent.Settings.Log.Where.FileExtension
+        $logToEventLog = $jsonFileContent.Settings.Log.Where.EventLog
+        $logSystemErrors = $jsonFileContent.Settings.Log.What.SystemErrors
+        $logAllActions = $jsonFileContent.Settings.Log.What.AllActions
+        $logOnlyActionErrors = $jsonFileContent.Settings.Log.What.OnlyActionErrors
 
         #region Get script name
         if (-not $scriptName) {
@@ -362,7 +362,7 @@ end {
             catch {
                 $systemErrors += [PSCustomObject]@{
                     DateTime = Get-Date
-                    Error    = "Failed creating log file in folder '$($jsonFileContent.Settings.Log.Folder)': $_"
+                    Error    = "Failed creating log file in folder '$($jsonFileContent.Settings.Log.Where.Folder)': $_"
                 }
             }
         }

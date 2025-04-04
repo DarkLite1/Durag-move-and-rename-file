@@ -57,7 +57,7 @@ param (
 begin {
     $ErrorActionPreference = 'stop'
 
-    $terminatingErrors = @()
+    $systemErrors = @()
     $logFileData = [System.Collections.Generic.List[PSObject]]::new()
     $scriptStartTime = Get-Date
 
@@ -108,7 +108,7 @@ begin {
         #endregion
     }
     catch {
-        $terminatingErrors += [PSCustomObject]@{
+        $systemErrors += [PSCustomObject]@{
             DateTime = Get-Date
             Error    = "Input file '$ImportFile': $_"
         }
@@ -117,7 +117,7 @@ begin {
 }
 
 process {
-    if ($terminatingErrors) { return }
+    if ($systemErrors) { return }
 
     try {
         #region Get files from source folder
@@ -226,7 +226,7 @@ process {
         }
     }
     catch {
-        $terminatingErrors += [PSCustomObject]@{
+        $systemErrors += [PSCustomObject]@{
             DateTime = Get-Date
             Error    = $_
         }
@@ -318,12 +318,12 @@ end {
                     }
                 }
 
-                if ($terminatingErrors) {
+                if ($systemErrors) {
                     Write-Verbose "Export errors to '$errorLogFilePath'"
 
                     switch ($logFileExtension) {
                         '.txt' {
-                            $terminatingErrors |
+                            $systemErrors |
                             Out-File -LiteralPath $errorLogFilePath
                             break
                         }
@@ -333,7 +333,7 @@ end {
                                 Delimiter         = ';'
                                 NoTypeInformation = $true
                             }
-                            $terminatingErrors | Export-Csv @params
+                            $systemErrors | Export-Csv @params
                             break
                         }
                         '.xlsx' {
@@ -346,7 +346,7 @@ end {
                                 TableName     = 'Overview'
                                 Verbose       = $false
                             }
-                            $terminatingErrors | Export-Excel @excelParams
+                            $systemErrors | Export-Excel @excelParams
                             break
                         }
                         default {
@@ -357,7 +357,7 @@ end {
                 #endregion
             }
             catch {
-                $terminatingErrors += [PSCustomObject]@{
+                $systemErrors += [PSCustomObject]@{
                     DateTime = Get-Date
                     Error    = "Failed creating log file in folder '$($jsonFileContent.Settings.Log.Folder)': $_"
                 }
@@ -371,7 +371,7 @@ end {
         #endregion
     }
     catch {
-        $terminatingErrors += [PSCustomObject]@{
+        $systemErrors += [PSCustomObject]@{
             DateTime = Get-Date
             Error    = $_
         }
@@ -381,8 +381,8 @@ end {
 
         #endregion
 
-        if ($terminatingErrors) {
-            Write-Warning $terminatingErrors
+        if ($systemErrors) {
+            Write-Warning $systemErrors
             exit 1
         }
     }

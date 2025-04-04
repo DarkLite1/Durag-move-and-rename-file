@@ -240,6 +240,9 @@ end {
         $logFolder = $jsonFileContent.Settings.Log.Folder
         $logFileExtension = $jsonFileContent.Settings.Log.FileExtension
         $logToEventLog = $jsonFileContent.Settings.Log.ToEventLog
+        $logSystemErrors = $jsonFileContent.Settings.Log.SystemErrors
+        $logAllActions = $jsonFileContent.Settings.Log.AllActions
+        $logOnlyActionErrors = $jsonFileContent.Settings.Log.OnlyActionErrors
 
         #region Get script name
         if (-not $scriptName) {

@@ -61,8 +61,6 @@ Describe 'create an error log file when' {
             $testNewInputFile | ConvertTo-Json -Depth 7
         )
 
-        # Mock Write-Warning
-
         .$testScript @testParams
 
         $LASTEXITCODE | Should -Be 1

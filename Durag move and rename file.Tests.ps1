@@ -195,5 +195,5 @@ Describe 'when a file fails to move' {
             ($LiteralPath -like '* - Errors.txt') -and
             ($InputObject -like "*Failed to move file '$($testFile.FullName)'*Oops*")
         }
-    } -Tag test
+    }
 }

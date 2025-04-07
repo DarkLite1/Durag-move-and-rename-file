@@ -245,6 +245,9 @@ end {
                 [Parameter(Mandatory)]
                 [String[]]$FileExtensions
             )
+
+            $allLogFilePaths = @()
+
             foreach (
                 $fileExtension in
                 $FileExtensions | Sort-Object -Unique
@@ -257,6 +260,8 @@ end {
                     '.txt' {
                         $DataToExport |
                         Out-File -LiteralPath $logFilePath
+
+                        $allLogFilePaths += $logFilePath
                         break
                     }
                     '.csv' {
@@ -266,6 +271,8 @@ end {
                             NoTypeInformation = $true
                         }
                         $DataToExport | Export-Csv @params
+
+                        $allLogFilePaths += $logFilePath
                         break
                     }
                     '.xlsx' {
@@ -279,6 +286,8 @@ end {
                             Verbose       = $false
                         }
                         $DataToExport | Export-Excel @excelParams
+
+                        $allLogFilePaths += $logFilePath
                         break
                     }
                     default {
@@ -286,6 +295,8 @@ end {
                     }
                 }
             }
+
+            $allLogFilePaths
         }
 
         $scriptName = $jsonFileContent.Settings.ScriptName
@@ -332,6 +343,8 @@ end {
                 #endregion
 
                 #region Create log file
+                $logFiles = @()
+
                 if ($logFileData) {
                     Write-Verbose "Export results"
 
@@ -340,7 +353,7 @@ end {
                         PartialPath    = "$baseLogName - Log{0}"
                         FileExtensions = $logFileExtensions
                     }
-                    Out-LogFileHC @params
+                    $logFiles += Out-LogFileHC @params
                 }
 
                 if ($systemErrors) {
@@ -351,7 +364,7 @@ end {
                         PartialPath    = "$baseLogName - SystemError{0}"
                         FileExtensions = $logFileExtensions
                     }
-                    Out-LogFileHC @params
+                    $logFiles += Out-LogFileHC @params
                 }
                 #endregion
             }

@@ -420,7 +420,16 @@ end {
 
         #region Write events to event log
         if ($logToEventLog) {
+            $eventLogParams = @{
+                Source  = $scriptName
+                Message = $systemErrors | Out-String
+                EntryType = 'Error'
+            }
 
+            Write-EventLog @eventLogParams
+        }
+        else {
+            Write-Verbose "Input file option 'Settings.Log.Where.EventLog' not true, no event log created."
         }
         #endregion
     }

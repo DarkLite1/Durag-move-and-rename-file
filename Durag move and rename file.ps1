@@ -343,28 +343,61 @@ end {
                 #endregion
 
                 #region Create log file
-                $logFiles = @()
+                $allLogFilePaths = @()
 
                 if ($logFileData) {
-                    Write-Verbose "Export results"
+                    Write-Warning "$($logFileData.Count) action results"
 
-                    $params = @{
-                        DataToExport   = $logFileData
-                        PartialPath    = "$baseLogName - Log{0}"
-                        FileExtensions = $logFileExtensions
+                    if ($logAllActions) {
+                        Write-Verbose 'Export all results'
+
+                        $params = @{
+                            DataToExport   = $logFileData
+                            PartialPath    = "$baseLogName - Results{0}"
+                            FileExtensions = $logFileExtensions
+                        }
+                        $allLogFilePaths += Out-LogFileHC @params
                     }
-                    $logFiles += Out-LogFileHC @params
+                    elseif ($logOnlyActionErrors) {
+                        $logFileDataErrors = $logFileData | Where-Object {
+                            $_.Error
+                        }
+
+                        if ($logFileDataErrors) {
+                            Write-Verbose "$($logFileDataErrors.Count) action errors"
+                            Write-Verbose 'Export result errors'
+
+                            $params = @{
+                                DataToExport   = $logFileDataErrors
+                                PartialPath    = "$baseLogName - Errors{0}"
+                                FileExtensions = $logFileExtensions
+                            }
+                            $allLogFilePaths += Out-LogFileHC @params
+                        } else {
+                            Write-Verbose 'No action errors'
+                        }
+                    }
+                    else {
+                        Write-Warning "Log file option 'AllActions', 'OnlyActionErrors' or 'SystemErrors' not found. No log file created."
+                    }
                 }
 
                 if ($systemErrors) {
-                    Write-Verbose "Export system errors"
+                    Write-Warning "$($systemErrors.Count) system errors found"
 
-                    $params = @{
-                        DataToExport   = $systemErrors
-                        PartialPath    = "$baseLogName - SystemError{0}"
-                        FileExtensions = $logFileExtensions
+                    if ($logSystemErrors) {
+                        Write-Verbose "Export system errors"
+
+                        $params = @{
+                            DataToExport   = $systemErrors
+                            PartialPath    = "$baseLogName - SystemErrors{0}"
+                            FileExtensions = $logFileExtensions
+                        }
+                        $allLogFilePaths += Out-LogFileHC @params
                     }
-                    $logFiles += Out-LogFileHC @params
+                    else {
+                        Write-Warning "Input file option 'Settings.Log.SystemErrors' not found. No log file created."
+                    }
                 }
                 #endregion
             }

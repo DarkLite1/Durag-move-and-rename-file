@@ -355,7 +355,7 @@ end {
                     $null = New-Item -Path $fullPath -ItemType Directory -Force
                 }
                 catch {
-                    throw "Failed creating folder '$fullPath': $_"
+                    throw "Failed creating log folder '$fullPath': $_"
                 }
             }
         }
@@ -378,12 +378,7 @@ end {
         if ($logFolder -and $logFileExtensions) {
             try {
                 #region Get log folder
-                try {
-                    Resolve-LogFolderHC -Path $logFolder
-                }
-                catch {
-                    throw "Failed to resolve log folder: $_"
-                }
+                Resolve-LogFolderHC -Path $logFolder
                 #endregion
 
                 #region Create log folder

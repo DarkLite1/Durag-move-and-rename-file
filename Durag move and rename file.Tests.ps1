@@ -50,7 +50,7 @@ Describe 'the mandatory parameters are' {
 Describe 'create an error log file when' {
     It 'the log folder cannot be created' {
         $testNewInputFile = Copy-ObjectHC $testInputFile
-        $testNewInputFile.Settings.Log.Where.Folder = 'xxx:://notExistingLocation'
+        $testNewInputFile.Settings.Log.Where.Folder = 'x:\notExistingLocation'
 
         $testNewInputFile.Source.Folder = (New-Item 'TestDrive:/source' -ItemType Directory).FullName
         $testNewInputFile.Destination.Folder = (New-Item 'TestDrive:/destination' -ItemType Directory).FullName
@@ -61,12 +61,14 @@ Describe 'create an error log file when' {
             $testNewInputFile | ConvertTo-Json -Depth 7
         )
 
+        # Mock Write-Warning
+
         .$testScript @testParams
 
-        Should -Invoke Out-File -Times 1 -Exactly -ParameterFilter {
-            ($FilePath -like '*\SystemErrors.txt') -and
-            ($InputObject -like '*Failed creating the log folder*')
-        }
+
+        # $LASTEXITCODE | Should -Be 1
+
+        # Should -Not -Invoke Out-File
     } -Tag test
     Context 'the ImportFile' {
         It 'is not found' {

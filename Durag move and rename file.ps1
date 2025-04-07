@@ -241,124 +241,126 @@ process {
 }
 
 end {
+    function Out-LogFileHC {
+        param (
+            [Parameter(Mandatory)]
+            [PSCustomObject[]]$DataToExport,
+            [Parameter(Mandatory)]
+            [String]$PartialPath,
+            [Parameter(Mandatory)]
+            [String[]]$FileExtensions
+        )
+
+        $allLogFilePaths = @()
+
+        foreach (
+            $fileExtension in
+            $FileExtensions | Sort-Object -Unique
+        ) {
+            $logFilePath = $PartialPath -f $fileExtension
+
+            Write-Verbose "Export '$($DataToExport.Count)' objects to '$logFilePath'"
+
+            switch ($fileExtension) {
+                '.txt' {
+                    $DataToExport |
+                    Out-File -LiteralPath $logFilePath
+
+                    $allLogFilePaths += $logFilePath
+                    break
+                }
+                '.csv' {
+                    $params = @{
+                        LiteralPath       = $logFilePath
+                        Delimiter         = ';'
+                        NoTypeInformation = $true
+                    }
+                    $DataToExport | Export-Csv @params
+
+                    $allLogFilePaths += $logFilePath
+                    break
+                }
+                '.xlsx' {
+                    $excelParams = @{
+                        Path          = $logFilePath
+                        AutoNameRange = $true
+                        AutoSize      = $true
+                        FreezeTopRow  = $true
+                        WorksheetName = 'Overview'
+                        TableName     = 'Overview'
+                        Verbose       = $false
+                    }
+                    $DataToExport | Export-Excel @excelParams
+
+                    $allLogFilePaths += $logFilePath
+                    break
+                }
+                default {
+                    throw "Log file extension '$_' not supported. Supported values are '.xlsx', '.txt' or '.csv'."
+                }
+            }
+        }
+
+        $allLogFilePaths
+    }
+
+    function Resolve-LogFolderHC {
+        <#
+        .SYNOPSIS
+            Ensures that a specified path exists, creating it if it doesn't.
+            Supports absolute paths and paths relative to $PSScriptRoot.
+
+        .DESCRIPTION
+            This function takes a path as input and checks if it exists. If
+            the path does not exist, it attempts to create the folder. It handles
+            both absolute paths and paths relative to the location of the currently
+            running script ($PSScriptRoot).
+
+        .PARAMETER Path
+            The path to ensure exists. This can be an absolute path (ex.
+            C:\MyFolder\SubFolder) or a path relative to the script's
+            directory (ex. Data\Logs).
+
+        .EXAMPLE
+            Resolve-LogFolderHC -Path 'C:\MyData\Output'
+            # Ensures the directory 'C:\MyData\Output' exists.
+
+        .EXAMPLE
+            Resolve-LogFolderHC -Path 'Logs\Archive'
+            # If the script is in 'C:\Scripts', this ensures 'C:\Scripts\Logs\Archive' exists.
+
+        .NOTES
+            If the path already exists, no action is taken.
+            If the creation of the path fails (e.g., due to permissions),
+            an error will be thrown.
+        #>
+
+        [CmdletBinding()]
+        param(
+            [Parameter(Mandatory)]
+            [string]$Path
+        )
+
+        if ($Path -match '^[a-zA-Z]:\\' -or $Path -match '^\\') {
+            $fullPath = $Path
+        }
+        else {
+            $fullPath = Join-Path -Path $PSScriptRoot -ChildPath $Path
+        }
+
+        if (-not (Test-Path -Path $fullPath)) {
+            try {
+                Write-Verbose "Create log folder '$fullPath'"
+                $null = New-Item -Path $fullPath -ItemType Directory -Force
+            }
+            catch {
+                throw "Failed creating log folder '$fullPath': $_"
+            }
+        }
+    }
+
     try {
-        function Out-LogFileHC {
-            param (
-                [Parameter(Mandatory)]
-                [PSCustomObject[]]$DataToExport,
-                [Parameter(Mandatory)]
-                [String]$PartialPath,
-                [Parameter(Mandatory)]
-                [String[]]$FileExtensions
-            )
 
-            $allLogFilePaths = @()
-
-            foreach (
-                $fileExtension in
-                $FileExtensions | Sort-Object -Unique
-            ) {
-                $logFilePath = $PartialPath -f $fileExtension
-
-                Write-Verbose "Export '$($DataToExport.Count)' objects to '$logFilePath'"
-
-                switch ($fileExtension) {
-                    '.txt' {
-                        $DataToExport |
-                        Out-File -LiteralPath $logFilePath
-
-                        $allLogFilePaths += $logFilePath
-                        break
-                    }
-                    '.csv' {
-                        $params = @{
-                            LiteralPath       = $logFilePath
-                            Delimiter         = ';'
-                            NoTypeInformation = $true
-                        }
-                        $DataToExport | Export-Csv @params
-
-                        $allLogFilePaths += $logFilePath
-                        break
-                    }
-                    '.xlsx' {
-                        $excelParams = @{
-                            Path          = $logFilePath
-                            AutoNameRange = $true
-                            AutoSize      = $true
-                            FreezeTopRow  = $true
-                            WorksheetName = 'Overview'
-                            TableName     = 'Overview'
-                            Verbose       = $false
-                        }
-                        $DataToExport | Export-Excel @excelParams
-
-                        $allLogFilePaths += $logFilePath
-                        break
-                    }
-                    default {
-                        throw "Log file extension '$_' not supported. Supported values are '.xlsx', '.txt' or '.csv'."
-                    }
-                }
-            }
-
-            $allLogFilePaths
-        }
-
-        function Resolve-LogFolderHC {
-            <#
-            .SYNOPSIS
-                Ensures that a specified path exists, creating it if it doesn't.
-                Supports absolute paths and paths relative to $PSScriptRoot.
-
-            .DESCRIPTION
-                This function takes a path as input and checks if it exists. If
-                the path does not exist, it attempts to create the folder. It handles
-                both absolute paths and paths relative to the location of the currently
-                running script ($PSScriptRoot).
-
-            .PARAMETER Path
-                The path to ensure exists. This can be an absolute path (ex.
-                C:\MyFolder\SubFolder) or a path relative to the script's
-                directory (ex. Data\Logs).
-
-            .EXAMPLE
-                Resolve-LogFolderHC -Path 'C:\MyData\Output'
-                # Ensures the directory 'C:\MyData\Output' exists.
-
-            .EXAMPLE
-                Resolve-LogFolderHC -Path 'Logs\Archive'
-                # If the script is in 'C:\Scripts', this ensures 'C:\Scripts\Logs\Archive' exists.
-
-            .NOTES
-                If the path already exists, no action is taken.
-                If the creation of the path fails (e.g., due to permissions),
-                an error will be thrown.
-            #>
-
-            [CmdletBinding()]
-            param(
-                [Parameter(Mandatory)]
-                [string]$Path
-            )
-
-            if ($Path -match '^[a-zA-Z]:\\' -or $Path -match '^\\') {
-                $fullPath = $Path
-            }
-            else {
-                $fullPath = Join-Path -Path $PSScriptRoot -ChildPath $Path
-            }
-
-            if (-not (Test-Path -Path $fullPath)) {
-                try {
-                    Write-Verbose "Create log folder '$fullPath'"
-                    $null = New-Item -Path $fullPath -ItemType Directory -Force
-                }
-                catch {
-                    throw "Failed creating log folder '$fullPath': $_"
-                }
-            }
-        }
 
         $scriptName = $jsonFileContent.Settings.ScriptName
         $logFolder = $jsonFileContent.Settings.Log.Where.Folder

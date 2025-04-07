@@ -468,13 +468,14 @@ end {
 
         #region Write events to event log
         if ($logToEventLog) {
-            $eventLogParams = @{
-                Source    = $scriptName
-                Message   = $systemErrors | Out-String
-                EntryType = 'Error'
+            $systemErrors | ForEach-Object {
+                $eventLogParams = @{
+                    Source    = $scriptName
+                    Message   = $_.Error
+                    EntryType = 'Error'
+                }
+                Write-EventLog @eventLogParams
             }
-
-            Write-EventLog @eventLogParams
         }
         else {
             Write-Verbose "Input file option 'Settings.Log.Where.EventLog' not true, no event log created."
@@ -495,7 +496,13 @@ end {
         #endregion
 
         if ($systemErrors) {
-            Write-Warning $systemErrors
+            Write-Warning "System errors found: $($systemErrors.Count)"
+
+            $systemErrors | ForEach-Object {
+                Write-Warning $_.Error
+            }
+
+            Write-Warning "Exit script with error code 1"
             exit 1
         }
     }

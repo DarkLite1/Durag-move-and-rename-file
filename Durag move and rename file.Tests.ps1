@@ -65,10 +65,9 @@ Describe 'create an error log file when' {
 
         .$testScript @testParams
 
+        $LASTEXITCODE | Should -Be 1
 
-        # $LASTEXITCODE | Should -Be 1
-
-        # Should -Not -Invoke Out-File
+        Should -Not -Invoke Out-File
     } -Tag test
     Context 'the ImportFile' {
         It 'is not found' {

@@ -236,9 +236,61 @@ process {
 
 end {
     try {
+        function Out-LogFileHC {
+            param (
+                [Parameter(Mandatory)]
+                [PSCustomObject[]]$DataToExport,
+                [Parameter(Mandatory)]
+                [String]$PartialPath,
+                [Parameter(Mandatory)]
+                [String[]]$FileExtensions
+            )
+            foreach (
+                $fileExtension in
+                $FileExtensions | Sort-Object -Unique
+            ) {
+                $logFilePath = $PartialPath -f $fileExtension
+
+                Write-Verbose "Export '$($DataToExport.Count)' objects to '$logFilePath'"
+
+                switch ($fileExtension) {
+                    '.txt' {
+                        $DataToExport |
+                        Out-File -LiteralPath $logFilePath
+                        break
+                    }
+                    '.csv' {
+                        $params = @{
+                            LiteralPath       = $logFilePath
+                            Delimiter         = ';'
+                            NoTypeInformation = $true
+                        }
+                        $DataToExport | Export-Csv @params
+                        break
+                    }
+                    '.xlsx' {
+                        $excelParams = @{
+                            Path          = $logFilePath
+                            AutoNameRange = $true
+                            AutoSize      = $true
+                            FreezeTopRow  = $true
+                            WorksheetName = 'Overview'
+                            TableName     = 'Overview'
+                            Verbose       = $false
+                        }
+                        $DataToExport | Export-Excel @excelParams
+                        break
+                    }
+                    default {
+                        throw "Log file extension '$_' not supported. Supported values are '.xlsx', '.txt' or '.csv'."
+                    }
+                }
+            }
+        }
+
         $scriptName = $jsonFileContent.Settings.ScriptName
         $logFolder = $jsonFileContent.Settings.Log.Where.Folder
-        $logFileExtension = $jsonFileContent.Settings.Log.Where.FileExtension
+        $logFileExtensions = $jsonFileContent.Settings.Log.Where.FileExtensions
         $logToEventLog = $jsonFileContent.Settings.Log.Where.EventLog
         $logSystemErrors = $jsonFileContent.Settings.Log.What.SystemErrors
         $logAllActions = $jsonFileContent.Settings.Log.What.AllActions
@@ -251,7 +303,7 @@ end {
         }
         #endregion
 
-        if ($logFolder) {
+        if ($logFolder -and $logFileExtensions) {
             try {
                 #region Get log folder
                 try {
@@ -280,82 +332,26 @@ end {
                 #endregion
 
                 #region Create log file
-                $logFileTemplate = "$baseLogName - {0}$logFileExtension"
-                $dataLogFilePath = $logFileTemplate -f 'log'
-                $errorLogFilePath = $logFileTemplate -f 'error'
-
                 if ($logFileData) {
-                    Write-Verbose "Export data to '$dataLogFilePath'"
+                    Write-Verbose "Export results"
 
-                    switch ($logFileExtension) {
-                        '.txt' {
-                            $logFileData |
-                            Out-File -LiteralPath $dataLogFilePath
-                            break
-                        }
-                        '.csv' {
-                            $params = @{
-                                LiteralPath       = $dataLogFilePath
-                                Delimiter         = ';'
-                                NoTypeInformation = $true
-                            }
-                            $logFileData | Export-Csv @params
-                            break
-                        }
-                        '.xlsx' {
-                            $excelParams = @{
-                                Path          = $dataLogFilePath
-                                AutoNameRange = $true
-                                AutoSize      = $true
-                                FreezeTopRow  = $true
-                                WorksheetName = 'Overview'
-                                TableName     = 'Overview'
-                                Verbose       = $false
-                            }
-                            $logFileData | Export-Excel @excelParams
-                            break
-                        }
-                        default {
-                            throw "Log file extension '$_' not supported. Supported values are '.xlsx', '.txt', '.csv' or NULL."
-                        }
+                    $params = @{
+                        DataToExport   = $logFileData
+                        PartialPath    = "$baseLogName - Log{0}"
+                        FileExtensions = $logFileExtensions
                     }
+                    Out-LogFileHC @params
                 }
 
                 if ($systemErrors) {
-                    Write-Verbose "Export errors to '$errorLogFilePath'"
+                    Write-Verbose "Export system errors"
 
-                    switch ($logFileExtension) {
-                        '.txt' {
-                            $systemErrors |
-                            Out-File -LiteralPath $errorLogFilePath
-                            break
-                        }
-                        '.csv' {
-                            $params = @{
-                                LiteralPath       = $errorLogFilePath
-                                Delimiter         = ';'
-                                NoTypeInformation = $true
-                            }
-                            $systemErrors | Export-Csv @params
-                            break
-                        }
-                        '.xlsx' {
-                            $excelParams = @{
-                                Path          = $errorLogFilePath
-                                AutoNameRange = $true
-                                AutoSize      = $true
-                                FreezeTopRow  = $true
-                                WorksheetName = 'Overview'
-                                TableName     = 'Overview'
-                                Verbose       = $false
-                            }
-                            $systemErrors | Export-Excel @excelParams
-                            break
-                        }
-                        default {
-                            throw "Log file extension '$_' not supported. Supported values are '.xlsx', '.txt', '.csv' or NULL."
-                        }
+                    $params = @{
+                        DataToExport   = $systemErrors
+                        PartialPath    = "$baseLogName - SystemError{0}"
+                        FileExtensions = $logFileExtensions
                     }
+                    Out-LogFileHC @params
                 }
                 #endregion
             }

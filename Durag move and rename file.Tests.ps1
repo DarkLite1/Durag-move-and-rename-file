@@ -7,12 +7,26 @@ BeforeAll {
     }
 
     $testInputFile = @{
-        Source                            = @{
+        Source      = @{
             Folder             = (New-Item 'TestDrive:/s' -ItemType Directory).FullName
             MatchFileNameRegex = 'Analyse_[0-9]{8}.xlsx'
         }
-        Destination                       = @{
+        Destination = @{
             Folder = (New-Item 'TestDrive:/d' -ItemType Directory).FullName
+        }
+        Settings    = @{
+            ScriptName = 'Test (Brecht)'
+            Log        = @{
+                What  = @{
+                    SystemErrors = $true
+                    AllActions   = $true
+                }
+                Where = @{
+                    Folder         = (New-Item 'TestDrive:/log' -ItemType Directory).FullName
+                    FileExtensions = @('.txt')
+                    EventLog       = $false
+                }
+            }
         }
     }
 
@@ -22,9 +36,7 @@ BeforeAll {
 
     $testScript = $PSCommandPath.Replace('.Tests.ps1', '.ps1')
     $testParams = @{
-        ScriptName = 'Test (Brecht)'
         ImportFile = $testOutParams.FilePath
-        LogFolder  = New-Item 'TestDrive:/log' -ItemType Directory
     }
 
     Mock Out-File
@@ -37,16 +49,25 @@ Describe 'the mandatory parameters are' {
 }
 Describe 'create an error log file when' {
     It 'the log folder cannot be created' {
-        $testNewParams = $testParams.clone()
-        $testNewParams.LogFolder = 'xxx:://notExistingLocation'
+        $testNewInputFile = Copy-ObjectHC $testInputFile
+        $testNewInputFile.Settings.Log.Where.Folder = 'xxx:://notExistingLocation'
 
-        .$testScript @testNewParams
+        $testNewInputFile.Source.Folder = (New-Item 'TestDrive:/source' -ItemType Directory).FullName
+        $testNewInputFile.Destination.Folder = (New-Item 'TestDrive:/destination' -ItemType Directory).FullName
+
+        New-Item "$($testNewInputFile.Source.Folder)\Analyse_26032025.xlsx" -ItemType File
+
+        & $realCmdLet.OutFile @testOutParams -InputObject (
+            $testNewInputFile | ConvertTo-Json -Depth 7
+        )
+
+        .$testScript @testParams
 
         Should -Invoke Out-File -Times 1 -Exactly -ParameterFilter {
-            ($FilePath -like '*\Error.txt') -and
+            ($FilePath -like '*\SystemErrors.txt') -and
             ($InputObject -like '*Failed creating the log folder*')
         }
-    }
+    } -Tag test
     Context 'the ImportFile' {
         It 'is not found' {
             $testNewParams = $testParams.clone()

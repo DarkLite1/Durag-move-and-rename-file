@@ -305,6 +305,61 @@ end {
             $allLogFilePaths
         }
 
+        function Resolve-LogFolderHC {
+            <#
+            .SYNOPSIS
+                Ensures that a specified path exists, creating it if it doesn't.
+                Supports absolute paths and paths relative to $PSScriptRoot.
+
+            .DESCRIPTION
+                This function takes a path as input and checks if it exists. If
+                the path does not exist, it attempts to create the folder. It handles
+                both absolute paths and paths relative to the location of the currently
+                running script ($PSScriptRoot).
+
+            .PARAMETER Path
+                The path to ensure exists. This can be an absolute path (ex.
+                C:\MyFolder\SubFolder) or a path relative to the script's
+                directory (ex. Data\Logs).
+
+            .EXAMPLE
+                Resolve-LogFolderHC -Path 'C:\MyData\Output'
+                # Ensures the directory 'C:\MyData\Output' exists.
+
+            .EXAMPLE
+                Resolve-LogFolderHC -Path 'Logs\Archive'
+                # If the script is in 'C:\Scripts', this ensures 'C:\Scripts\Logs\Archive' exists.
+
+            .NOTES
+                If the path already exists, no action is taken.
+                If the creation of the path fails (e.g., due to permissions),
+                an error will be thrown.
+            #>
+
+            [CmdletBinding()]
+            param(
+                [Parameter(Mandatory)]
+                [string]$Path
+            )
+
+            if ($Path -match '^[a-zA-Z]:\\' -or $Path -match '^\\') {
+                $fullPath = $Path
+            }
+            else {
+                $fullPath = Join-Path -Path $PSScriptRoot -ChildPath $Path
+            }
+
+            if (-not (Test-Path -Path $fullPath)) {
+                try {
+                    Write-Verbose "Create log folder '$fullPath'"
+                    $null = New-Item -Path $fullPath -ItemType Directory -Force
+                }
+                catch {
+                    throw "Failed creating folder '$fullPath': $_"
+                }
+            }
+        }
+
         $scriptName = $jsonFileContent.Settings.ScriptName
         $logFolder = $jsonFileContent.Settings.Log.Where.Folder
         $logFileExtensions = $jsonFileContent.Settings.Log.Where.FileExtensions
@@ -324,11 +379,7 @@ end {
             try {
                 #region Get log folder
                 try {
-                    if (-not [System.IO.Path]::IsPathRooted($logFolder)) {
-                        $logFolder = Resolve-Path -Path (
-                            Join-Path -Path $PSScriptRoot -ChildPath $logFolder
-                        ) -ErrorAction Stop
-                    }
+                    Resolve-LogFolderHC -Path $logFolder
                 }
                 catch {
                     throw "Failed to resolve log folder: $_"
@@ -337,6 +388,8 @@ end {
 
                 #region Create log folder
                 try {
+                    Write-Verbose "Create log folder '$LogFolder'"
+
                     $logFolderItem = New-Item -Path $LogFolder -ItemType 'Directory' -Force -EA Stop
 
                     $baseLogName = Join-Path -Path $logFolderItem.FullName -ChildPath (
@@ -352,7 +405,7 @@ end {
                 $allLogFilePaths = @()
 
                 if ($logFileData) {
-                    Write-Warning "$($logFileData.Count) action results"
+                    Write-Verbose "Result $($logFileData.Count) action(s)"
 
                     if ($logAllActions) {
                         Write-Verbose 'Export all results'
@@ -421,8 +474,8 @@ end {
         #region Write events to event log
         if ($logToEventLog) {
             $eventLogParams = @{
-                Source  = $scriptName
-                Message = $systemErrors | Out-String
+                Source    = $scriptName
+                Message   = $systemErrors | Out-String
                 EntryType = 'Error'
             }
 

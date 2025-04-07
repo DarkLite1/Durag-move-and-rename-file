@@ -112,6 +112,9 @@ begin {
             DateTime = Get-Date
             Error    = "Input file '$ImportFile': $_"
         }
+
+        Write-Warning $systemErrors[0].Error
+
         return
     }
 }
@@ -226,10 +229,13 @@ process {
         }
     }
     catch {
+        Write-Warning "Failure: $_"
+
         $systemErrors += [PSCustomObject]@{
             DateTime = Get-Date
             Error    = $_
         }
+
         return
     }
 }
@@ -373,7 +379,8 @@ end {
                                 FileExtensions = $logFileExtensions
                             }
                             $allLogFilePaths += Out-LogFileHC @params
-                        } else {
+                        }
+                        else {
                             Write-Verbose 'No action errors'
                         }
                     }
@@ -386,7 +393,7 @@ end {
                     Write-Warning "$($systemErrors.Count) system errors found"
 
                     if ($logSystemErrors) {
-                        Write-Verbose "Export system errors"
+                        Write-Verbose 'Export system errors'
 
                         $params = @{
                             DataToExport   = $systemErrors
@@ -396,7 +403,7 @@ end {
                         $allLogFilePaths += Out-LogFileHC @params
                     }
                     else {
-                        Write-Warning "Input file option 'Settings.Log.SystemErrors' not found. No log file created."
+                        Write-Verbose "Input file option 'Settings.Log.SystemErrors' not true. No log file created."
                     }
                 }
                 #endregion
@@ -406,6 +413,8 @@ end {
                     DateTime = Get-Date
                     Error    = "Failed creating log file in folder '$($jsonFileContent.Settings.Log.Where.Folder)': $_"
                 }
+
+                Write-Warning $systemErrors[0].Error
             }
         }
 
@@ -416,6 +425,8 @@ end {
         #endregion
     }
     catch {
+        Write-Warning "Failure: $_"
+
         $systemErrors += [PSCustomObject]@{
             DateTime = Get-Date
             Error    = $_

@@ -66,7 +66,7 @@ Describe 'create an error log file when' {
         $LASTEXITCODE | Should -Be 1
 
         Should -Not -Invoke Out-File
-    } -Tag test
+    }
     Context 'the ImportFile' {
         It 'is not found' {
             $testNewParams = $testParams.clone()
@@ -74,10 +74,9 @@ Describe 'create an error log file when' {
 
             .$testScript @testNewParams
 
-            Should -Invoke Out-File -Times 1 -Exactly -ParameterFilter {
-                ($FilePath -like '* - Error.txt') -and
-                ($InputObject -like '*Cannot find path*nonExisting.json*')
-            }
+            $LASTEXITCODE | Should -Be 1
+
+            Should -Not -Invoke Out-File
         }
         Context 'property' {
             It '<_> not found' -ForEach @(
@@ -92,8 +91,10 @@ Describe 'create an error log file when' {
 
                 .$testScript @testParams
 
+                $LASTEXITCODE | Should -Be 1
+
                 Should -Invoke Out-File -Times 1 -Exactly -ParameterFilter {
-                    ($FilePath -like '* - Error.txt') -and
+                    ($LiteralPath -like '* - SystemErrors.txt') -and
                     ($InputObject -like "*$ImportFile*Property 'Source.$_' not found*")
                 }
             }
@@ -110,7 +111,7 @@ Describe 'create an error log file when' {
                 .$testScript @testParams
 
                 Should -Invoke Out-File -Times 1 -Exactly -ParameterFilter {
-                    ($FilePath -like '* - Error.txt') -and
+                    ($LiteralPath -like '* - SystemErrors.txt') -and
                     ($InputObject -like "*$ImportFile*Property 'Destination.$_' not found*")
                 }
             }
@@ -127,7 +128,7 @@ Describe 'create an error log file when' {
                 .$testScript @testParams
 
                 Should -Invoke Out-File -Times 1 -Exactly -ParameterFilter {
-                    ($FilePath -like '* - Error.txt') -and
+                    ($LiteralPath -like '* - SystemErrors.txt') -and
                     ($InputObject -like "*$ImportFile*$_.Folder 'TestDrive:\nonExisting' not found*")
                 }
             }
@@ -175,6 +176,9 @@ Describe 'when a file fails to move' {
 
         $testNewInputFile = Copy-ObjectHC $testInputFile
 
+        $testNewInputFile.Settings.Log.What.AllActions = $false
+        $testNewInputFile.Settings.Log.What.OnlyActionErrors = $true
+
         $testNewInputFile.Source.Folder = (New-Item 'TestDrive:/source' -ItemType Directory).FullName
         $testNewInputFile.Destination.Folder = (New-Item 'TestDrive:/destination' -ItemType Directory).FullName
 
@@ -188,8 +192,8 @@ Describe 'when a file fails to move' {
     }
     It 'an error log file is created' {
         Should -Invoke Out-File -Times 1 -Exactly -Scope Describe -ParameterFilter {
-            ($FilePath -like '* - Error.txt') -and
-            ($InputObject -like "*Failure for source file*Failed to move file '$($testFile.FullName)'*")
+            ($LiteralPath -like '* - Errors.txt') -and
+            ($InputObject -like "*Failed to move file '$($testFile.FullName)'*Oops*")
         }
-    }
+    } -Tag test
 }

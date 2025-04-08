@@ -600,7 +600,7 @@ end {
             Write-EventsToEventLogHC @params
         }
         else {
-            Write-Verbose "Input file option 'Settings.Log.Where.EventLog' not true, no event log created."
+            Write-Verbose "Input file option 'Settings.Log.Where.EventLog' not true, no events created in the event log."
         }
         #endregion
     }

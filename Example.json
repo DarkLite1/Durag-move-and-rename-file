@@ -8,6 +8,10 @@
   },
   "Settings": {
     "ScriptName": "Durag move and rename file",
+    "SendMail": {
+      "To": ["bob@contoso.com"],
+      "When": "Always"
+    },
     "Log": {
       "What": {
         "SystemErrors": true,

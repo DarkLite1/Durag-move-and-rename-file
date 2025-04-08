@@ -464,13 +464,23 @@ end {
     }
 
     try {
-        $scriptName = $jsonFileContent.Settings.ScriptName
-        $logFolder = $jsonFileContent.Settings.Log.Where.Folder
-        $logFileExtensions = $jsonFileContent.Settings.Log.Where.FileExtensions
-        $logToEventLog = $jsonFileContent.Settings.Log.Where.EventLog
-        $logSystemErrors = $jsonFileContent.Settings.Log.What.SystemErrors
-        $logAllActions = $jsonFileContent.Settings.Log.What.AllActions
-        $logOnlyActionErrors = $jsonFileContent.Settings.Log.What.OnlyActionErrors
+        $settings = $jsonFileContent.Settings
+
+        $scriptName = $settings.ScriptName
+        $logFolder = $settings.Log.Where.Folder
+        $logFileExtensions = $settings.Log.Where.FileExtensions
+        $isLog = @{
+            systemErrors     = $settings.Log.What.SystemErrors
+            AllActions       = $settings.Log.What.AllActions
+            OnlyActionErrors = $settings.Log.What.OnlyActionErrors
+        }
+        $isLogToEventLog = $settings.Log.Where.EventLog
+        $sendMailTo = $settings.SendMail.To
+        $isSendMail = @{
+            systemErrors     = $settings.SendMail.When.SystemErrors
+            AllActions       = $settings.SendMail.When.AllActions
+            OnlyActionErrors = $settings.SendMail.When.OnlyActionErrors
+        }
 
         #region Get script name
         if (-not $scriptName) {
@@ -507,7 +517,7 @@ end {
                 if ($logFileData) {
                     Write-Verbose "Result $($logFileData.Count) action(s)"
 
-                    if ($logAllActions) {
+                    if ($isLog.AllActions) {
                         Write-Verbose 'Export all results'
 
                         $params = @{
@@ -517,7 +527,7 @@ end {
                         }
                         $allLogFilePaths += Out-LogFileHC @params
                     }
-                    elseif ($logOnlyActionErrors) {
+                    elseif ($isLog.OnlyActionErrors) {
                         $logFileDataErrors = $logFileData | Where-Object {
                             $_.Error
                         }
@@ -545,7 +555,7 @@ end {
                 if ($systemErrors) {
                     Write-Warning "$($systemErrors.Count) system errors found"
 
-                    if ($logSystemErrors) {
+                    if ($isLog.SystemErrors) {
                         Write-Verbose 'Export system errors'
 
                         $params = @{
@@ -564,7 +574,7 @@ end {
             catch {
                 $systemErrors += [PSCustomObject]@{
                     DateTime = Get-Date
-                    Message  = "Failed creating log file in folder '$($jsonFileContent.Settings.Log.Where.Folder)': $_"
+                    Message  = "Failed creating log file in folder '$($settings.Log.Where.Folder)': $_"
                 }
 
                 Write-Warning $systemErrors[0].Message
@@ -573,7 +583,7 @@ end {
         #endregion
 
         #region Write events to event log
-        if ($logToEventLog) {
+        if ($isLogToEventLog) {
             try {
                 $systemErrors | ForEach-Object {
                     $eventLogData.Add(
@@ -614,6 +624,16 @@ end {
         else {
             Write-Verbose "Input file option 'Settings.Log.Where.EventLog' not true, no events created in the event log."
         }
+        #endregion
+
+        #region Send email
+        if ($allLogFilePaths) {
+            Write-Verbose "Send email with log files '$($allLogFilePaths -join ',')'"
+        }
+        else {
+            Write-Verbose 'No log files to send'
+        }
+
         #endregion
     }
     catch {

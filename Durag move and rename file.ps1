@@ -123,7 +123,7 @@ begin {
             Message  = "Input file '$ImportFile': $_"
         }
 
-        Write-Warning $systemErrors[0].Message
+        Write-Warning $systemErrors[-1].Message
 
         return
     }
@@ -264,7 +264,7 @@ process {
             Message  = $_
         }
 
-        Write-Warning $systemErrors[0].Message
+        Write-Warning $systemErrors[-1].Message
 
         return
     }
@@ -485,8 +485,8 @@ end {
         #endregion
 
         $allLogFilePaths = @()
-
         $logFileDataErrors = $logFileData.Where({ $_.Error })
+        $baseLogName = $null
 
         #region Create log files
         if ($logFolder -and $logFileExtensions) {
@@ -570,7 +570,7 @@ end {
                     Message  = "Failed creating log file in folder '$($settings.Log.Where.Folder)': $_"
                 }
 
-                Write-Warning $systemErrors[0].Message
+                Write-Warning $systemErrors[-1].Message
             }
         }
         #endregion
@@ -611,7 +611,16 @@ end {
                     Message  = "Failed writing events to event log: $_"
                 }
 
-                Write-Warning $systemErrors[0].Message
+                Write-Warning $systemErrors[-1].Message
+
+                if ($baseLogName) {
+                    $params = @{
+                        DataToExport   = $systemErrors[-1]
+                        PartialPath    = "$baseLogName - Errors{0}"
+                        FileExtensions = $logFileExtensions
+                    }
+                    $allLogFilePaths += Out-LogFileHC @params
+                }
             }
         }
         else {
@@ -717,7 +726,16 @@ end {
                 Message  = "Failed sending email: $_"
             }
 
-            Write-Warning $systemErrors[0].Message
+            Write-Warning $systemErrors[-1].Message
+
+            if ($baseLogName) {
+                $params = @{
+                    DataToExport   = $systemErrors[-1]
+                    PartialPath    = "$baseLogName - Errors{0}"
+                    FileExtensions = $logFileExtensions
+                }
+                $allLogFilePaths += Out-LogFileHC @params
+            }
         }
         #endregion
     }
@@ -727,7 +745,7 @@ end {
             Message  = $_
         }
 
-        Write-Warning $systemErrors[0].Message
+        Write-Warning $systemErrors[-1].Message
     }
     finally {
         #region Send email

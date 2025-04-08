@@ -707,7 +707,7 @@ end {
             }
         }
         else {
-            Write-Warning "SendMail.When '$($sendMail.When)' not supported. No email sent."
+            throw "SendMail.When '$($sendMail.When)' not supported. Supported values are 'Never', 'Always', 'OnError' or 'OnErrorOrAction'."
         }
         #endregion
     }

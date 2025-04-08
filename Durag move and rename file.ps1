@@ -190,7 +190,8 @@ process {
                 #endregion
 
                 #region Create destination folder
-                try {
+                $result.DestinationFolder = $DestinationFolder
+                <# try {
                     $params = @{
                         Path      = $DestinationFolder
                         ChildPath = $year
@@ -217,7 +218,7 @@ process {
                 }
                 catch {
                     throw "Failed to create destination folder '$($result.DestinationFolder)': $_"
-                }
+                } #>
                 #endregion
 
                 #region Move file to destination folder

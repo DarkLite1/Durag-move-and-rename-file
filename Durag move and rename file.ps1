@@ -424,7 +424,6 @@ end {
         #>
 
         [CmdLetBinding()]
-        [OutputType()]
         param (
             [Parameter(Mandatory)]
             [String]$Source,
@@ -454,7 +453,7 @@ end {
                     ErrorAction = 'Stop'
                 }
 
-                Write-Verbose "Write event to log '$LogName' with source '$Source' and message '$($params.Message)'"
+                Write-Verbose "Write event to log '$LogName' source '$Source' with message '$($params.Message)'"
 
                 Write-EventLog @params
             }

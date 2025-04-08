@@ -23,8 +23,8 @@ BeforeAll {
                 }
                 Where = @{
                     Folder         = (New-Item 'TestDrive:/log' -ItemType Directory).FullName
-                    FileExtensions = @('.txt')
-                    EventLog       = $false
+                    FileExtensions = @('.txt', '.csv')
+                    EventLog       = $true
                 }
             }
         }
@@ -40,6 +40,7 @@ BeforeAll {
     }
 
     Mock Out-File
+    Mock Write-EventLog
 }
 Describe 'the mandatory parameters are' {
     It '<_>' -ForEach @('ImportFile') {

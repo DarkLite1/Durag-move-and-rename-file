@@ -18,8 +18,9 @@ BeforeAll {
             ScriptName = 'Test (Brecht)'
             Log        = @{
                 What  = @{
-                    SystemErrors = $true
-                    AllActions   = $true
+                    SystemErrors     = $true
+                    AllActions       = $true
+                    OnlyActionErrors = $false
                 }
                 Where = @{
                     Folder         = (New-Item 'TestDrive:/log' -ItemType Directory).FullName

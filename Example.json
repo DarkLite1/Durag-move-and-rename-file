@@ -16,7 +16,7 @@
       },
       "Where": {
         "Folder": "..\\Logs",
-        "FileExtensions": [".xlsx"],
+        "FileExtensions": [".xlsx", ".txt", ".csv"],
         "EventLog": false
       }
     }
@@ -32,7 +32,7 @@
         },
         "Where": {
           "Folder": "Value '..\\Logs' : Path relative to the script. Value 'C:\\MyApp\\Logs' : An absolute path. Value NULL : Create no log file.",
-          "FileExtensions": "Value ['.xlsx'] : Create an Excel log file. Value ['.txt'] : Create a text log file. Value ['.csv'] : Create a comma separated log file. Multiple values are supported. The FileExtension is ignored when LogFolder is NULL.",
+          "FileExtensions": "Value ['.xlsx'] : Create an Excel log file. To create Excel log files the module 'ImportExcel' must be installed (`Install-Module -Name ImportExcel`). Value ['.txt'] : Create a text log file. Value ['.csv'] : Create a comma separated log file. Multiple values are supported. The FileExtension is ignored when LogFolder is NULL.",
           "EventLog": "Value TRUE : Log verbose to event log. Value FALSE : Do not log messages to the event log."
         }
       }

@@ -479,6 +479,7 @@ end {
         }
         #endregion
 
+        #region Create log files
         if ($logFolder -and $logFileExtensions) {
             try {
                 #region Get log folder
@@ -569,6 +570,7 @@ end {
                 Write-Warning $systemErrors[0].Message
             }
         }
+        #endregion
 
         #region Write events to event log
         if ($logToEventLog) {

@@ -618,13 +618,13 @@ end {
         #endregion
 
         if ($systemErrors) {
-            Write-Warning "System errors found: $($systemErrors.Count)"
+            Write-Warning "Found $($systemErrors.Count) system errors"
 
             $systemErrors | ForEach-Object {
                 Write-Warning $_.Message
             }
 
-            Write-Warning "Exit script with error code 1"
+            Write-Warning 'Exit script with error code 1'
             exit 1
         }
     }

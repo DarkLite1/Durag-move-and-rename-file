@@ -259,12 +259,12 @@ process {
         #endregion
     }
     catch {
-        Write-Warning "Failure: $_"
-
         $systemErrors += [PSCustomObject]@{
             DateTime = Get-Date
             Message  = $_
         }
+
+        Write-Warning $systemErrors[0].Message
 
         return
     }

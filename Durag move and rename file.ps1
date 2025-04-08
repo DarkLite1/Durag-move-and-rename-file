@@ -335,17 +335,18 @@ end {
         $allLogFilePaths
     }
 
-    function Resolve-LogFolderHC {
+    function Get-LogFolderHC {
         <#
         .SYNOPSIS
             Ensures that a specified path exists, creating it if it doesn't.
-            Supports absolute paths and paths relative to $PSScriptRoot.
+            Supports absolute paths and paths relative to $PSScriptRoot. Returns
+            the full path of the folder.
 
         .DESCRIPTION
             This function takes a path as input and checks if it exists. If
-            the path does not exist, it attempts to create the folder. It handles
-            both absolute paths and paths relative to the location of the currently
-            running script ($PSScriptRoot).
+            the path does not exist, it attempts to create the folder. It
+            handles both absolute paths and paths relative to the location of
+            the currently running script ($PSScriptRoot).
 
         .PARAMETER Path
             The path to ensure exists. This can be an absolute path (ex.
@@ -353,17 +354,12 @@ end {
             directory (ex. Data\Logs).
 
         .EXAMPLE
-            Resolve-LogFolderHC -Path 'C:\MyData\Output'
+            Get-LogFolderHC -Path 'C:\MyData\Output'
             # Ensures the directory 'C:\MyData\Output' exists.
 
         .EXAMPLE
-            Resolve-LogFolderHC -Path 'Logs\Archive'
+            Get-LogFolderHC -Path 'Logs\Archive'
             # If the script is in 'C:\Scripts', this ensures 'C:\Scripts\Logs\Archive' exists.
-
-        .NOTES
-            If the path already exists, no action is taken.
-            If the creation of the path fails (e.g., due to permissions),
-            an error will be thrown.
         #>
 
         [CmdletBinding()]
@@ -379,7 +375,7 @@ end {
             $fullPath = Join-Path -Path $PSScriptRoot -ChildPath $Path
         }
 
-        if (-not (Test-Path -Path $fullPath)) {
+        if (-not (Test-Path -Path $fullPath -PathType Container)) {
             try {
                 Write-Verbose "Create log folder '$fullPath'"
                 $null = New-Item -Path $fullPath -ItemType Directory -Force
@@ -388,6 +384,8 @@ end {
                 throw "Failed creating log folder '$fullPath': $_"
             }
         }
+
+        $fullPath
     }
 
     function Write-EventsToEventLogHC {
@@ -488,21 +486,18 @@ end {
         $allLogFilePaths = @()
         $logFileDataErrors = $logFileData.Where({ $_.Error })
         $baseLogName = $null
+        $logFolderPath = $null
 
         #region Create log files
         if ($logFolder -and $logFileExtensions) {
             try {
                 #region Get log folder
-                Resolve-LogFolderHC -Path $logFolder
-                #endregion
-
-                #region Create log folder
                 try {
-                    Write-Verbose "Create log folder '$LogFolder'"
+                    $logFolderPath = Get-LogFolderHC -Path $logFolder
 
-                    $logFolderItem = New-Item -Path $LogFolder -ItemType 'Directory' -Force -EA Stop
+                    Write-Verbose "Log folder '$logFolderPath'"
 
-                    $baseLogName = Join-Path -Path $logFolderItem.FullName -ChildPath (
+                    $baseLogName = Join-Path -Path $logFolderPath -ChildPath (
                         '{0} - {1}' -f $scriptStartTime.ToString('yyyy_MM_dd_HHmmss_dddd'), $ScriptName
                     )
                 }
@@ -632,11 +627,13 @@ end {
         #region Send email
         try {
             $mailParams = @{
-                To        = $sendMail.To
-                Subject   = $sendMail.Subject
-                Message   = $sendMail.Body
-                LogFolder = $logFolder
-                Header    = $scriptName
+                To      = $sendMail.To
+                Subject = $sendMail.Subject
+                Message = $sendMail.Body
+                Header  = $scriptName
+            }
+            if ($logFolderPath) {
+                $mailParams.LogFolder = $logFolderPath
             }
             if ($sendMail.Bcc) {
                 $mailParams.Bcc = $sendMail.Bcc

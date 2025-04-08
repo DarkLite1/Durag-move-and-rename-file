@@ -218,10 +218,10 @@ Describe 'when a file fails to move' {
 
         $testLogFiles | Where-Object { $_.Name -like '* - Errors.csv' } |
         Should -Not -BeNullOrEmpty
-
-        # Should -Invoke Out-File -Times 1 -Exactly -Scope Describe -ParameterFilter {
-        #     ($LiteralPath -like '* - Errors.txt') -and
-        #     ($InputObject -like "*Failed to move file '$($testFile.FullName)'*Oops*")
-        # }
-    } -Tag test
+    }
+    It 'Log file content is correct' {
+        $testLogFiles | Where-Object { $_.Name -like '* - Errors.txt' } |
+        Get-Content -Raw |
+        Should -BeLike  "*Failed to move file '$($testFile.FullName)'*Oops*"
+    }
 }

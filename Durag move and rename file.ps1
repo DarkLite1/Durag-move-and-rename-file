@@ -490,6 +490,8 @@ end {
         #endregion
 
         #region Create log files
+        $allLogFilePaths = @()
+
         if ($logFolder -and $logFileExtensions) {
             try {
                 #region Get log folder
@@ -512,8 +514,6 @@ end {
                 #endregion
 
                 #region Create log file
-                $allLogFilePaths = @()
-
                 if ($logFileData) {
                     Write-Verbose "Result $($logFileData.Count) action(s)"
 

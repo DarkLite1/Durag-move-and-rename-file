@@ -227,7 +227,7 @@ Describe 'when a file fails to move' {
     It 'an email is sent when SendMail.When is Always' {
         Should -Invoke Send-MailHC -Times 1 -Exactly -Scope Describe -ParameterFilter {
             ($To -eq $testInputFile.Settings.SendMail.To) -and
-            ($Subject -eq $testInputFile.Settings.SendMail.Subject) -and
+            ($Subject -eq "Errors 1, $($testInputFile.Settings.SendMail.Subject)") -and
             ($Body -eq $testInputFile.Settings.SendMail.Body) -and
             ($Attachments -contains $testLogFiles[0].FullName) -and
             ($Attachments -contains $testLogFiles[1].FullName)

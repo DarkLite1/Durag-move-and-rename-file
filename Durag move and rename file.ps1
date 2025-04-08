@@ -644,6 +644,9 @@ end {
                 $mailParams.Bcc = $sendMail.Bcc
             }
             if ($systemErrors -or $logFileDataErrors) {
+                $mailParams.Subject = 'Errors {0}, {1}' -f
+                ($systemErrors.Count + $logFileDataErrors.Count),
+                $sendMail.subject
                 $mailParams.Priority = 'High'
             }
 

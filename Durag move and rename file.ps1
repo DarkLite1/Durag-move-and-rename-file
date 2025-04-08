@@ -475,12 +475,7 @@ end {
             OnlyActionErrors = $settings.Log.What.OnlyActionErrors
         }
         $isLogToEventLog = $settings.Log.Where.EventLog
-        $sendMailTo = $settings.SendMail.To
-        $isSendMail = @{
-            systemErrors     = $settings.SendMail.When.SystemErrors
-            AllActions       = $settings.SendMail.When.AllActions
-            OnlyActionErrors = $settings.SendMail.When.OnlyActionErrors
-        }
+        $sendMail = $settings.SendMail
 
         #region Get script name
         if (-not $scriptName) {
@@ -489,9 +484,11 @@ end {
         }
         #endregion
 
-        #region Create log files
         $allLogFilePaths = @()
 
+        $logFileDataErrors = $logFileData.Where({ $_.Error })
+
+        #region Create log files
         if ($logFolder -and $logFileExtensions) {
             try {
                 #region Get log folder
@@ -528,10 +525,6 @@ end {
                         $allLogFilePaths += Out-LogFileHC @params
                     }
                     elseif ($isLog.OnlyActionErrors) {
-                        $logFileDataErrors = $logFileData | Where-Object {
-                            $_.Error
-                        }
-
                         if ($logFileDataErrors) {
                             Write-Verbose "$($logFileDataErrors.Count) action errors"
                             Write-Verbose 'Export result errors'
@@ -627,13 +620,35 @@ end {
         #endregion
 
         #region Send email
-        if ($allLogFilePaths) {
-            Write-Verbose "Send email with log files '$($allLogFilePaths -join ',')'"
+        if ($sendMail.When -eq 'never') {
+            Write-Verbose "SendMail.When 'Never'"
+        }
+        elseif ($sendMail.When -eq 'always') {
+            Write-Verbose "SendMail.When 'Always'"
+
+            $mailParams = @{
+                To        = $sendMail.To
+                Subject   = $sendMail.Subject
+                Message   = $sendMail.Body
+                LogFolder = $logFolder
+                Header    = $scriptName
+            }
+
+            if ($allLogFilePaths) {
+                $mailParams.Attachments = $allLogFilePaths
+            }
+
+            if ($sendMail.Bcc) {
+                $mailParams.Bcc = $sendMail.Bcc
+            }
+
+            Write-Verbose "Send email to '$($mailParams.To)' with subject '$($mailParams.Subject)' and body '$($mailParams.Message)'"
+
+            Send-MailHC @mailParams
         }
         else {
-            Write-Verbose 'No log files to send'
-        }
 
+        }
         #endregion
     }
     catch {

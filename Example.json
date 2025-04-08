@@ -9,8 +9,11 @@
   "Settings": {
     "ScriptName": "Durag move and rename file",
     "SendMail": {
+      "When": "OnError",
       "To": ["bob@contoso.com"],
-      "When": "Always"
+      "Bcc": [],
+      "Subject": "Durag move and rename file",
+      "Body": "The script 'Durag move and rename file' has finished. Check the log file for details."
     },
     "Log": {
       "What": {
@@ -28,6 +31,10 @@
   "?": {
     "Settings": {
       "ScriptName": "Name of the script, used in the log files and in the event logs",
+      "SendMail": {
+        "To": "An array of email addresses. The script will send an email to all addresses in the array.",
+        "When": "Value 'OnError' : Send email only when a system error or an action error occurs. Value 'OnErrorOrAction' : Send email when the script performed actions or when errors occurred. Value 'Always' : Send email when the script is finished, regardless of success or failure. Value 'Never' : Do not send email."
+      },
       "Log": {
         "What": {
           "SystemErrors": "Value TRUE : Log execution errors, incorrect input file errors, ... Value FALSE : Do not log errors.",

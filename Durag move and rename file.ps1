@@ -637,9 +637,6 @@ end {
                 LogFolder = $logFolder
                 Header    = $scriptName
             }
-            if ($allLogFilePaths) {
-                $mailParams.Attachments = $allLogFilePaths | Sort-Object -Unique
-            }
             if ($sendMail.Bcc) {
                 $mailParams.Bcc = $sendMail.Bcc
             }
@@ -650,6 +647,10 @@ end {
                 $mailParams.Subject = 'Errors {0}, {1}' -f $totalErrorCount,
                 $sendMail.subject
                 $mailParams.Message = '<p><strong>Found {0} error(s)</p></strong>{1}' -f $totalErrorCount, $sendMail.Body
+            }
+            if ($allLogFilePaths) {
+                $mailParams.Attachments = $allLogFilePaths | Sort-Object -Unique
+                $mailParams.Message = '{0}{1}' -f $mailParams.Message, '<p><i>* Check the attachment(s) for details</i></p>'
             }
 
             Write-Verbose "SendMail.When '$($sendMail.When)'"

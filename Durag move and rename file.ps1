@@ -75,7 +75,9 @@ begin {
         #region Import .json file
         Write-Verbose "Import .json file '$ImportFile'"
 
-        $jsonFileContent = Get-Content $ImportFile -Raw -Encoding UTF8 |
+        $jsonFileItem = Get-Item -LiteralPath $ImportFile -ErrorAction Stop
+
+        $jsonFileContent = Get-Content $jsonFileItem -Raw -Encoding UTF8 |
         ConvertFrom-Json
         #endregion
 
@@ -498,7 +500,10 @@ end {
                     Write-Verbose "Log folder '$logFolderPath'"
 
                     $baseLogName = Join-Path -Path $logFolderPath -ChildPath (
-                        '{0} - {1}' -f $scriptStartTime.ToString('yyyy_MM_dd_HHmmss_dddd'), $ScriptName
+                        '{0} - {1} ({2})' -f
+                        $scriptStartTime.ToString('yyyy_MM_dd_HHmmss_dddd'),
+                        $ScriptName,
+                        $jsonFileItem.BaseName
                     )
                 }
                 catch {

@@ -224,4 +224,13 @@ Describe 'when a file fails to move' {
         Get-Content -Raw |
         Should -BeLike  "*Failed to move file '$($testFile.FullName)'*Oops*"
     }
+    It 'an email is sent when SendMail.When is Always' {
+        Should -Invoke Send-MailHC -Times 1 -Exactly -Scope Describe -ParameterFilter {
+            ($To -eq $testInputFile.Settings.SendMail.To) -and
+            ($Subject -eq $testInputFile.Settings.SendMail.Subject) -and
+            ($Body -eq $testInputFile.Settings.SendMail.Body) -and
+            ($Attachments -contains $testLogFiles[0].FullName) -and
+            ($Attachments -contains $testLogFiles[1].FullName)
+        }
+    } -Tag test
 }

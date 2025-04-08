@@ -605,12 +605,12 @@ end {
         #endregion
     }
     catch {
-        Write-Warning "Failure: $_"
-
         $systemErrors += [PSCustomObject]@{
             DateTime = Get-Date
             Message  = $_
         }
+
+        Write-Warning $systemErrors[0].Message
     }
     finally {
         #region Send email

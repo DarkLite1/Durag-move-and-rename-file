@@ -603,7 +603,7 @@ end {
             catch {
                 $systemErrors += [PSCustomObject]@{
                     DateTime = Get-Date
-                    Message  = "Failed writing events tot event log $_"
+                    Message  = "Failed writing events to event log: $_"
                 }
 
                 Write-Warning $systemErrors[0].Message

@@ -572,32 +572,42 @@ end {
 
         #region Write events to event log
         if ($logToEventLog) {
-            $systemErrors | ForEach-Object {
+            try {
+                $systemErrors | ForEach-Object {
+                    $eventLogData.Add(
+                        [PSCustomObject]@{
+                            DateTime  = $_.DateTime
+                            Message   = $_.Message
+                            EntryType = 'Error'
+                            EventID   = '2'
+                        }
+                    )
+                }
+
                 $eventLogData.Add(
                     [PSCustomObject]@{
-                        DateTime  = $_.DateTime
-                        Message   = $_.Message
-                        EntryType = 'Error'
-                        EventID   = '2'
+                        DateTime  = Get-Date
+                        Message   = 'Script ended'
+                        EntryType = 'Information'
+                        EventID   = '199'
                     }
                 )
-            }
 
-            $eventLogData.Add(
-                [PSCustomObject]@{
-                    DateTime  = Get-Date
-                    Message   = 'Script ended'
-                    EntryType = 'Information'
-                    EventID   = '199'
+                $params = @{
+                    Source  = $scriptName
+                    LogName = 'HCScripts'
+                    Events  = $eventLogData
                 }
-            )
-
-            $params = @{
-                Source  = $scriptName
-                LogName = 'HCScripts'
-                Events  = $eventLogData
+                Write-EventsToEventLogHC @params
             }
-            Write-EventsToEventLogHC @params
+            catch {
+                $systemErrors += [PSCustomObject]@{
+                    DateTime = Get-Date
+                    Message  = "Failed writing events tot event log $_"
+                }
+
+                Write-Warning $systemErrors[0].Message
+            }
         }
         else {
             Write-Verbose "Input file option 'Settings.Log.Where.EventLog' not true, no events created in the event log."

@@ -620,37 +620,12 @@ end {
         #endregion
 
         #region Send email
-        if ($sendMail.When -eq 'never') {
-            Write-Verbose "SendMail.When 'Never'"
-        }
-        elseif ($sendMail.When -eq 'always') {
-            Write-Verbose "SendMail.When 'Always'"
-
-            $mailParams = @{
-                To        = $sendMail.To
-                Subject   = $sendMail.Subject
-                Message   = $sendMail.Body
-                LogFolder = $logFolder
-                Header    = $scriptName
+        try {
+            if ($sendMail.When -eq 'never') {
+                Write-Verbose "SendMail.When 'Never'"
             }
-
-            if ($allLogFilePaths) {
-                $mailParams.Attachments = $allLogFilePaths
-            }
-
-            if ($sendMail.Bcc) {
-                $mailParams.Bcc = $sendMail.Bcc
-            }
-
-            Write-Verbose "Send email to '$($mailParams.To)' with subject '$($mailParams.Subject)' and body '$($mailParams.Message)'"
-
-            Send-MailHC @mailParams
-        }
-        elseif ($sendMail.When -eq 'onError') {
-            Write-Verbose "SendMail.When 'OnError'"
-
-            if ($systemErrors -or $logFileDataErrors) {
-                Write-Verbose "Found $($systemErrors.Count) system errors and $($logFileDataErrors.Count) action errors"
+            elseif ($sendMail.When -eq 'always') {
+                Write-Verbose "SendMail.When 'Always'"
 
                 $mailParams = @{
                     To        = $sendMail.To
@@ -672,42 +647,77 @@ end {
 
                 Send-MailHC @mailParams
             }
+            elseif ($sendMail.When -eq 'onError') {
+                Write-Verbose "SendMail.When 'OnError'"
+
+                if ($systemErrors -or $logFileDataErrors) {
+                    Write-Verbose "Found $($systemErrors.Count) system errors and $($logFileDataErrors.Count) action errors"
+
+                    $mailParams = @{
+                        To        = $sendMail.To
+                        Subject   = $sendMail.Subject
+                        Message   = $sendMail.Body
+                        LogFolder = $logFolder
+                        Header    = $scriptName
+                    }
+
+                    if ($allLogFilePaths) {
+                        $mailParams.Attachments = $allLogFilePaths
+                    }
+
+                    if ($sendMail.Bcc) {
+                        $mailParams.Bcc = $sendMail.Bcc
+                    }
+
+                    Write-Verbose "Send email to '$($mailParams.To)' with subject '$($mailParams.Subject)' and body '$($mailParams.Message)'"
+
+                    Send-MailHC @mailParams
+                }
+                else {
+                    Write-Verbose 'No system or actions errors, no email sent'
+                }
+            }
+            elseif ($sendMail.When -eq 'OnErrorOrAction') {
+                Write-Verbose "SendMail.When 'OnErrorOrAction'"
+
+                if ($systemErrors -or $logFileDataErrors -or $logFileData) {
+                    Write-Verbose "Found $($systemErrors.Count) system errors, $($logFileDataErrors.Count) action errors and $($logFileData.Count) action results"
+
+                    $mailParams = @{
+                        To        = $sendMail.To
+                        Subject   = $sendMail.Subject
+                        Message   = $sendMail.Body
+                        LogFolder = $logFolder
+                        Header    = $scriptName
+                    }
+
+                    if ($allLogFilePaths) {
+                        $mailParams.Attachments = $allLogFilePaths
+                    }
+
+                    if ($sendMail.Bcc) {
+                        $mailParams.Bcc = $sendMail.Bcc
+                    }
+
+                    Write-Verbose "Send email to '$($mailParams.To)' with subject '$($mailParams.Subject)' and body '$($mailParams.Message)'"
+
+                    Send-MailHC @mailParams
+                }
+                else {
+                    Write-Verbose 'No system, actions errors or action results. No email sent'
+                }
+            }
             else {
-                Write-Verbose 'No system or actions errors, no email sent'
+                throw "SendMail.When '$($sendMail.When)' not supported. Supported values are 'Never', 'Always', 'OnError' or 'OnErrorOrAction'."
             }
         }
-        elseif ($sendMail.When -eq 'OnErrorOrAction') {
-            Write-Verbose "SendMail.When 'OnErrorOrAction'"
-
-            if ($systemErrors -or $logFileDataErrors -or $logFileData) {
-                Write-Verbose "Found $($systemErrors.Count) system errors, $($logFileDataErrors.Count) action errors and $($logFileData.Count) action results"
-
-                $mailParams = @{
-                    To        = $sendMail.To
-                    Subject   = $sendMail.Subject
-                    Message   = $sendMail.Body
-                    LogFolder = $logFolder
-                    Header    = $scriptName
-                }
-
-                if ($allLogFilePaths) {
-                    $mailParams.Attachments = $allLogFilePaths
-                }
-
-                if ($sendMail.Bcc) {
-                    $mailParams.Bcc = $sendMail.Bcc
-                }
-
-                Write-Verbose "Send email to '$($mailParams.To)' with subject '$($mailParams.Subject)' and body '$($mailParams.Message)'"
-
-                Send-MailHC @mailParams
+        catch {
+            $systemErrors += [PSCustomObject]@{
+                DateTime = Get-Date
+                Message  = "Failed sending email: $_"
             }
-            else {
-                Write-Verbose 'No system, actions errors or action results. No email sent'
-            }
-        }
-        else {
-            throw "SendMail.When '$($sendMail.When)' not supported. Supported values are 'Never', 'Always', 'OnError' or 'OnErrorOrAction'."
+
+            Write-Warning $systemErrors[0].Message
         }
         #endregion
     }

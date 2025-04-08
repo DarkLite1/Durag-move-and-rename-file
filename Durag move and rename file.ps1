@@ -120,10 +120,10 @@ begin {
     catch {
         $systemErrors += [PSCustomObject]@{
             DateTime = Get-Date
-            Error    = "Input file '$ImportFile': $_"
+            Message  = "Input file '$ImportFile': $_"
         }
 
-        Write-Warning $systemErrors[0].Error
+        Write-Warning $systemErrors[0].Message
 
         return
     }
@@ -145,12 +145,22 @@ process {
             }
         )
 
+        $eventLogData.Add(
+            [PSCustomObject]@{
+                DateTime  = $scriptStartTime
+                Message   = "Found $($filesToProcess.Count) file(s) in source folder '$SourceFolder'"
+                EntryType = 'Information'
+                EventID   = '4'
+            }
+        )
+
         if (!$filesToProcess) {
             Write-Verbose 'No files found, exit script'
             exit
         }
         #endregion
 
+        #region Process files
         foreach ($file in $filesToProcess) {
             try {
                 Write-Verbose "Processing file '$($file.FullName)'"
@@ -237,13 +247,23 @@ process {
                 $logFileData.Add($result)
             }
         }
+
+        $eventLogData.Add(
+            [PSCustomObject]@{
+                DateTime  = $scriptStartTime
+                Message   = "Processed $($logFileData.Count) file(s) in source folder '$SourceFolder'"
+                EntryType = 'Information'
+                EventID   = '4'
+            }
+        )
+        #endregion
     }
     catch {
         Write-Warning "Failure: $_"
 
         $systemErrors += [PSCustomObject]@{
             DateTime = Get-Date
-            Error    = $_
+            Message  = $_
         }
 
         return
@@ -372,38 +392,35 @@ end {
     function Write-EventsToEventLogHC {
         <#
         .SYNOPSIS
-            Import all the parameters for writing to the event log.
+            Write events to the event log.
 
         .DESCRIPTION
-            Import all the necessary parameters for writing to the event log. The
-            use of this function will allow standardization in the Windows Event Log
-            by using the same EventID's and other properties across different
-            scripts.
+            The use of this function will allow standardization in the Windows
+            Event Log by using the same EventID's and other properties across
+            different scripts.
 
             Custom Windows EventID's based on the PowerShell standard streams:
 
             PowerShell Stream     EventIcon    EventID   EventDescription
             -----------------     ---------    -------   ----------------
-                                  [i] Info     100       Script started
+            [i] Info              [i] Info     100       Script started
             [4] Verbose           [i] Info     4         Verbose message
             [1] Output/Success    [i] Info     1         Output on success
-                                  [i] Info     199       Script ended successfully
             [3] Warning           [w] Warning  3         Warning message
             [2] Error             [e] Error    2         Fatal error message
+            [i] Info              [i] Info     199       Script ended successfully
 
         .PARAMETER Source
             Specifies the script name under which the events will be logged.
 
-        .EXAMPLE
-            $ScriptName = 'Test'
-            Write-EventsToEventLogHC -Source $ScriptName
-            Write-EventLog @EventStartParams
-            Write-EventLog @EventVerboseParams -Message 'This is a verbose message'
-            Write-EventLog @EventOutParams -Message 'Send e-mail to the user'
-            Write-EventLog @EventEndParams
+        .PARAMETER LogName
+            Specifies the name of the event log to which the events will be
+            written. If the log does not exist, it will be created.
 
-            Writes the start and end time to the Windows Event Log together with
-            information from the verbose and output stream.
+        .PARAMETER Events
+            Specifies the events to be written to the event log. This should be
+            an array of PSCustomObject with properties: DateTime, Message,
+            EntryType, and EventID.
         #>
 
         [CmdLetBinding()]
@@ -412,48 +429,38 @@ end {
             [Parameter(Mandatory)]
             [String]$Source,
             [Parameter(Mandatory)]
-            [String]$LogName
+            [String]$LogName,
+            [PSCustomObject[]]$Events
         )
 
-        if (
-            -not(
-                ([System.Diagnostics.EventLog]::Exists($LogName)) -and
-                [System.Diagnostics.EventLog]::SourceExists($Source)
-            )
-        ) {
-            New-EventLog -LogName $LogName -Source $Source -ErrorAction Stop
-        }
+        try {
+            if (
+                -not(
+                    ([System.Diagnostics.EventLog]::Exists($LogName)) -and
+                    [System.Diagnostics.EventLog]::SourceExists($Source)
+                )
+            ) {
+                Write-Verbose "Create event log '$LogName' and source '$Source'"
+                New-EventLog -LogName $LogName -Source $Source -ErrorAction Stop
+            }
 
-        $EventParams = @{
-            LogName     = $LogName
-            Source      = $Source
-            ErrorAction = 'Stop'
+            foreach ($eventItem in $Events) {
+                $params = @{
+                    LogName     = $LogName
+                    Source      = $Source
+                    EntryType   = $eventItem.EntryType
+                    EventID     = $eventItem.EventID
+                    Message     = '{0}: {1}' -f $eventItem.DateTime, $eventItem.Message
+                    ErrorAction = 'Stop'
+                }
+
+                Write-Verbose "Write event to log '$LogName' with source '$Source' and message '$($params.Message)'"
+
+                Write-EventLog @params
+            }
         }
-        $Global:EventStartParams = $EventParams + @{
-            EntryType = 'Information'
-            EventID   = '100'
-            Message   = ($env:USERNAME + ' - ' + 'Script started')
-        }
-        $Global:EventEndParams = $EventParams + @{
-            EntryType = 'Information'
-            EventID   = '199'
-            Message   = ($env:USERNAME + ' - ' + 'Script ended')
-        }
-        $Global:EventVerboseParams = $EventParams + @{
-            EntryType = 'Information'
-            EventID   = '4'
-        }
-        $Global:EventOutParams = $EventParams + @{
-            EntryType = 'Information'
-            EventID   = '1'
-        }
-        $Global:EventWarnParams = $EventParams + @{
-            EntryType = 'Warning'
-            EventID   = '3'
-        }
-        $Global:EventErrorParams = $EventParams + @{
-            EntryType = 'Error'
-            EventID   = '2'
+        catch {
+            throw "Failed to write to event log '$LogName' with source '$Source': $_"
         }
     }
 
@@ -557,15 +564,26 @@ end {
             catch {
                 $systemErrors += [PSCustomObject]@{
                     DateTime = Get-Date
-                    Error    = "Failed creating log file in folder '$($jsonFileContent.Settings.Log.Where.Folder)': $_"
+                    Message  = "Failed creating log file in folder '$($jsonFileContent.Settings.Log.Where.Folder)': $_"
                 }
 
-                Write-Warning $systemErrors[0].Error
+                Write-Warning $systemErrors[0].Message
             }
         }
 
         #region Write events to event log
         if ($logToEventLog) {
+            $systemErrors | ForEach-Object {
+                $eventLogData.Add(
+                    [PSCustomObject]@{
+                        DateTime  = $_.DateTime
+                        Message   = $_.Message
+                        EntryType = 'Error'
+                        EventID   = '2'
+                    }
+                )
+            }
+
             $eventLogData.Add(
                 [PSCustomObject]@{
                     DateTime  = Get-Date
@@ -575,25 +593,12 @@ end {
                 }
             )
 
-            $systemErrors | ForEach-Object {
-                $eventLogData.Add(
-                    [PSCustomObject]@{
-                        DateTime  = Get-Date
-                        Message   = $_.Error
-                        EntryType = 'Error'
-                        EventID   = '2'
-                    }
-                )
-            }
-
             $params = @{
                 Source  = $scriptName
                 LogName = 'HCScripts'
                 Events  = $eventLogData
             }
             Write-EventsToEventLogHC @params
-
-
         }
         else {
             Write-Verbose "Input file option 'Settings.Log.Where.EventLog' not true, no event log created."
@@ -605,7 +610,7 @@ end {
 
         $systemErrors += [PSCustomObject]@{
             DateTime = Get-Date
-            Error    = $_
+            Message  = $_
         }
     }
     finally {
@@ -617,7 +622,7 @@ end {
             Write-Warning "System errors found: $($systemErrors.Count)"
 
             $systemErrors | ForEach-Object {
-                Write-Warning $_.Error
+                Write-Warning $_.Message
             }
 
             Write-Warning "Exit script with error code 1"

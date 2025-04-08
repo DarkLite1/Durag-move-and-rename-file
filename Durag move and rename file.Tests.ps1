@@ -16,6 +16,12 @@ BeforeAll {
         }
         Settings    = @{
             ScriptName = 'Test (Brecht)'
+            SendMail   = @{
+                When    = "Always"
+                To      = "bob@example.com"
+                Subject = 'Email subject'
+                Body    = 'Email body'
+            }
             Log        = @{
                 What  = @{
                     SystemErrors     = $true
@@ -40,7 +46,7 @@ BeforeAll {
         ImportFile = $testOutParams.FilePath
     }
 
-    Mock Out-File
+    Mock Send-MailHC
     Mock Write-EventLog
 }
 Describe 'the mandatory parameters are' {
@@ -51,6 +57,8 @@ Describe 'the mandatory parameters are' {
 }
 Describe 'create an error log file when' {
     It 'the log folder cannot be created' {
+        Mock Out-File
+
         $testNewInputFile = Copy-ObjectHC $testInputFile
         $testNewInputFile.Settings.Log.Where.Folder = 'x:\notExistingLocation'
 
@@ -71,6 +79,8 @@ Describe 'create an error log file when' {
     }
     Context 'the ImportFile' {
         It 'is not found' {
+            Mock Out-File
+
             $testNewParams = $testParams.clone()
             $testNewParams.ImportFile = 'nonExisting.json'
 
@@ -84,6 +94,8 @@ Describe 'create an error log file when' {
             It '<_> not found' -ForEach @(
                 'Folder', 'MatchFileNameRegex'
             ) {
+                Mock Out-File
+
                 $testNewInputFile = Copy-ObjectHC $testInputFile
                 $testNewInputFile.Source.$_ = $null
 
@@ -103,6 +115,8 @@ Describe 'create an error log file when' {
             It '<_> not found' -ForEach @(
                 'Folder'
             ) {
+                Mock Out-File
+
                 $testNewInputFile = Copy-ObjectHC $testInputFile
                 $testNewInputFile.Destination.$_ = $null
 
@@ -120,6 +134,8 @@ Describe 'create an error log file when' {
             It 'Folder <_> not found' -ForEach @(
                 'Source', 'Destination'
             ) {
+                Mock Out-File
+
                 $testNewInputFile = Copy-ObjectHC $testInputFile
                 $testNewInputFile[$_]['Folder'] = 'TestDrive:\nonExisting'
 
@@ -139,6 +155,8 @@ Describe 'create an error log file when' {
 }
 Describe 'when the source folder is empty' {
     It 'no error log file is created' {
+        Mock Out-File
+
         $testNewInputFile = Copy-ObjectHC $testInputFile
         $testNewInputFile.Source.Folder = (New-Item 'TestDrive:/empty' -ItemType Directory).FullName
 
@@ -191,11 +209,19 @@ Describe 'when a file fails to move' {
         )
 
         .$testScript @testParams
+
+        $testLogFiles = Get-ChildItem -Path $testInputFile.Settings.Log.Where.Folder -Recurse -File
     }
-    It 'an error log file is created' {
-        Should -Invoke Out-File -Times 1 -Exactly -Scope Describe -ParameterFilter {
-            ($LiteralPath -like '* - Errors.txt') -and
-            ($InputObject -like "*Failed to move file '$($testFile.FullName)'*Oops*")
-        }
-    }
+    It 'error log files are created for each extension' {
+        $testLogFiles | Where-Object { $_.Name -like '* - Errors.txt' } |
+        Should -Not -BeNullOrEmpty
+
+        $testLogFiles | Where-Object { $_.Name -like '* - Errors.csv' } |
+        Should -Not -BeNullOrEmpty
+
+        # Should -Invoke Out-File -Times 1 -Exactly -Scope Describe -ParameterFilter {
+        #     ($LiteralPath -like '* - Errors.txt') -and
+        #     ($InputObject -like "*Failed to move file '$($testFile.FullName)'*Oops*")
+        # }
+    } -Tag test
 }

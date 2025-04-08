@@ -646,8 +646,68 @@ end {
 
             Send-MailHC @mailParams
         }
-        else {
+        elseif ($sendMail.When -eq 'onError') {
+            Write-Verbose "SendMail.When 'OnError'"
 
+            if ($systemErrors -or $logFileDataErrors) {
+                Write-Verbose "Found $($systemErrors.Count) system errors and $($logFileDataErrors.Count) action errors"
+
+                $mailParams = @{
+                    To        = $sendMail.To
+                    Subject   = $sendMail.Subject
+                    Message   = $sendMail.Body
+                    LogFolder = $logFolder
+                    Header    = $scriptName
+                }
+
+                if ($allLogFilePaths) {
+                    $mailParams.Attachments = $allLogFilePaths
+                }
+
+                if ($sendMail.Bcc) {
+                    $mailParams.Bcc = $sendMail.Bcc
+                }
+
+                Write-Verbose "Send email to '$($mailParams.To)' with subject '$($mailParams.Subject)' and body '$($mailParams.Message)'"
+
+                Send-MailHC @mailParams
+            }
+            else {
+                Write-Verbose 'No system or actions errors, no email sent'
+            }
+        }
+        elseif ($sendMail.When -eq 'OnErrorOrAction') {
+            Write-Verbose "SendMail.When 'OnErrorOrAction'"
+
+            if ($systemErrors -or $logFileDataErrors -or $logFileData) {
+                Write-Verbose "Found $($systemErrors.Count) system errors, $($logFileDataErrors.Count) action errors and $($logFileData.Count) action results"
+
+                $mailParams = @{
+                    To        = $sendMail.To
+                    Subject   = $sendMail.Subject
+                    Message   = $sendMail.Body
+                    LogFolder = $logFolder
+                    Header    = $scriptName
+                }
+
+                if ($allLogFilePaths) {
+                    $mailParams.Attachments = $allLogFilePaths
+                }
+
+                if ($sendMail.Bcc) {
+                    $mailParams.Bcc = $sendMail.Bcc
+                }
+
+                Write-Verbose "Send email to '$($mailParams.To)' with subject '$($mailParams.Subject)' and body '$($mailParams.Message)'"
+
+                Send-MailHC @mailParams
+            }
+            else {
+                Write-Verbose 'No system, actions errors or action results. No email sent'
+            }
+        }
+        else {
+            Write-Warning "SendMail.When '$($sendMail.When)' not supported. No email sent."
         }
         #endregion
     }

@@ -644,10 +644,12 @@ end {
                 $mailParams.Bcc = $sendMail.Bcc
             }
             if ($systemErrors -or $logFileDataErrors) {
-                $mailParams.Subject = 'Errors {0}, {1}' -f
-                ($systemErrors.Count + $logFileDataErrors.Count),
-                $sendMail.subject
+                $totalErrorCount = $systemErrors.Count + $logFileDataErrors.Count
+
                 $mailParams.Priority = 'High'
+                $mailParams.Subject = 'Errors {0}, {1}' -f $totalErrorCount,
+                $sendMail.subject
+                $mailParams.Message = '<p><strong>Found {0} error(s)</p></strong>{1}' -f $totalErrorCount, $sendMail.Body
             }
 
             Write-Verbose "SendMail.When '$($sendMail.When)'"

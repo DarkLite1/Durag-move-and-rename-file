@@ -232,5 +232,5 @@ Describe 'when a file fails to move' {
             ($Attachments -contains $testLogFiles[0].FullName) -and
             ($Attachments -contains $testLogFiles[1].FullName)
         }
-    } -Tag test
+    }
 }

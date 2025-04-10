@@ -646,14 +646,14 @@ end {
                             <td$($logFileData.Count)</td>
                         </tr>
                         $(
-                            if($logFileDataErrors.Count -gt 0) {
+                            if($logFileDataErrors.Count) {
                             "<tr style=`"background-color: #f78474;`">
                                 <th>Action errors</th>
                                 <td$($logFileDataErrors.Count)</td>
                             </tr>"
                         })
                         $(
-                            if($systemErrors.Count -gt 0) {
+                            if($systemErrors.Count) {
                             "<tr style=`"background-color: #f78474;`">
                                 <th>System errors</th>
                                 <td$($systemErrors.Count)</td>

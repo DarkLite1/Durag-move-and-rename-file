@@ -537,7 +537,7 @@ end {
 
                             $params = @{
                                 DataToExport   = $logFileDataErrors
-                                PartialPath    = "$baseLogName - Errors{0}"
+                                PartialPath    = "$baseLogName - Action errors{0}"
                                 FileExtensions = $logFileExtensions
                             }
                             $allLogFilePaths += Out-LogFileHC @params
@@ -559,7 +559,7 @@ end {
 
                         $params = @{
                             DataToExport   = $systemErrors
-                            PartialPath    = "$baseLogName - SystemErrors{0}"
+                            PartialPath    = "$baseLogName - System errors{0}"
                             FileExtensions = $logFileExtensions
                         }
                         $allLogFilePaths += Out-LogFileHC @params

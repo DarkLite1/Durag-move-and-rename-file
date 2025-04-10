@@ -108,7 +108,7 @@ Describe 'create an error log file when' {
                 $LASTEXITCODE | Should -Be 1
 
                 Should -Invoke Out-File -Times 1 -Exactly -ParameterFilter {
-                    ($LiteralPath -like '* - SystemErrors.txt') -and
+                    ($LiteralPath -like '* - System errors.txt') -and
                     ($InputObject -like "*$ImportFile*Property 'Source.$_' not found*")
                 }
             }
@@ -127,7 +127,7 @@ Describe 'create an error log file when' {
                 .$testScript @testParams
 
                 Should -Invoke Out-File -Times 1 -Exactly -ParameterFilter {
-                    ($LiteralPath -like '* - SystemErrors.txt') -and
+                    ($LiteralPath -like '* - System errors.txt') -and
                     ($InputObject -like "*$ImportFile*Property 'Destination.$_' not found*")
                 }
             }
@@ -146,7 +146,7 @@ Describe 'create an error log file when' {
                 .$testScript @testParams
 
                 Should -Invoke Out-File -Times 1 -Exactly -ParameterFilter {
-                    ($LiteralPath -like '* - SystemErrors.txt') -and
+                    ($LiteralPath -like '* - System errors.txt') -and
                     ($InputObject -like "*$ImportFile*$_.Folder 'TestDrive:\nonExisting' not found*")
                 }
             }
@@ -232,14 +232,14 @@ Describe 'when a file fails to move' {
         $testLogFiles = Get-ChildItem -Path $testInputFile.Settings.Log.Where.Folder -Recurse -File
     }
     It 'error log files are created for each extension' {
-        $testLogFiles | Where-Object { $_.Name -like '* - Errors.txt' } |
+        $testLogFiles | Where-Object { $_.Name -like '* - Action errors.txt' } |
         Should -Not -BeNullOrEmpty
 
-        $testLogFiles | Where-Object { $_.Name -like '* - Errors.csv' } |
+        $testLogFiles | Where-Object { $_.Name -like '* - Action errors.csv' } |
         Should -Not -BeNullOrEmpty
     }
     It 'Log file content is correct' {
-        $testLogFiles | Where-Object { $_.Name -like '* - Errors.txt' } |
+        $testLogFiles | Where-Object { $_.Name -like '* - Action errors.txt' } |
         Get-Content -Raw |
         Should -BeLike  "*Failed to move file '$($testFile.FullName)'*Oops*"
     }

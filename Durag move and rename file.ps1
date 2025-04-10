@@ -636,7 +636,7 @@ end {
 
         #region Send email
         try {
-            if ($sendMail.When -ne 'never') {
+            if ($sendMail.When -ne 'Never') {
                 Write-Verbose "Send email '$($sendMail.When)'"
 
                 $mailParams = @{

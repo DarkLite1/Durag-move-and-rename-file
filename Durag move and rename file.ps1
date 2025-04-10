@@ -643,7 +643,7 @@ end {
                     <table>
                         <tr>
                             <th>Actions</th>
-                            <td$($logFileData.Count)</td>
+                            <td>$($logFileData.Count)</td>
                         </tr>
                         $(if($logFileDataErrors.Count) {
                             '<tr style="background-color: #f78474;">'
@@ -651,7 +651,7 @@ end {
                             '<tr>'
                         })
                             <th>Action errors</th>
-                            <td$($logFileDataErrors.Count)</td>
+                            <td>$($logFileDataErrors.Count)</td>
                         </tr>
                         $(if($systemErrors.Count) {
                             '<tr style="background-color: #f78474;">'
@@ -659,14 +659,15 @@ end {
                             '<tr>'
                         })
                             <th>System errors</th>
-                            <td$($systemErrors.Count)</td>
+                            <td>$($systemErrors.Count)</td>
                         </tr>
                     </table>
 "@
 
                 $mailParams = @{
                     To      = $sendMail.To
-                    Subject = $sendMail.Subject
+                    Subject = '{0} actions, {1}' -f
+                    $logFileData.Count, $sendMail.Subject
                     Message = '{0} {1}' -f $sendMail.Body, $table
                     Header  = $scriptName
                 }
@@ -681,29 +682,33 @@ end {
                     $totalErrorCount = $systemErrors.Count + $logFileDataErrors.Count
 
                     $mailParams.Priority = 'High'
-                    $mailParams.Subject = 'Errors {0}, {1}' -f $totalErrorCount,
-                    $sendMail.subject
-                    $mailParams.Message = '<p><strong>Found {0} error(s)</p></strong>{1}' -f $totalErrorCount, $sendMail.Body
+                    $mailParams.Subject = '{0} errors, {1}' -f
+                    $totalErrorCount, $mailParams.Subject
                 }
                 if ($allLogFilePaths) {
                     $mailParams.Attachments = $allLogFilePaths | Sort-Object -Unique
                     $mailParams.Message = '{0}{1}' -f $mailParams.Message, '<p><i>* Check the attachment(s) for details</i></p>'
                 }
 
+                Write-Verbose "Mail to '$($mailParams.To)'"
+                Write-Verbose "Mail bcc '$($mailParams.Bcc)'"
+                Write-Verbose "Mail priority '$($mailParams.Priority)'"
+                Write-Verbose "Mail subject '$($mailParams.Subject)'"
+                Write-Verbose "Mail body '$($mailParams.Message)'"
+                Write-Verbose "Mail attachments '$($mailParams.Attachments)'"
+                Write-Verbose "Mail log folder '$($mailParams.LogFolder)'"
+
                 Write-Verbose "Found $($systemErrors.Count) system errors, $($logFileDataErrors.Count) action errors and $($logFileData.Count) action results"
 
                 switch ($sendMail.When) {
                     'Always' {
-                        Write-Verbose "Send email to '$($mailParams.To)' with subject '$($mailParams.Subject)' and body '$($mailParams.Message)'"
-
+                        Write-Verbose 'Send email'
                         Send-MailHC @mailParams
-
                         break
                     }
                     'OnError' {
                         if ($systemErrors -or $logFileDataErrors) {
-                            Write-Verbose "Send email to '$($mailParams.To)' with subject '$($mailParams.Subject)' and body '$($mailParams.Message)'"
-
+                            Write-Verbose 'Send email'
                             Send-MailHC @mailParams
                         }
                         else {
@@ -718,8 +723,7 @@ end {
                             $logFileDataErrors -or
                             $logFileData
                         ) {
-                            Write-Verbose "Send email to '$($mailParams.To)' with subject '$($mailParams.Subject)' and body '$($mailParams.Message)'"
-
+                            Write-Verbose 'Send email'
                             Send-MailHC @mailParams
                         }
                         else {

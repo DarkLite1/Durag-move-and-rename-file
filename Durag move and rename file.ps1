@@ -645,20 +645,22 @@ end {
                             <th>Actions</th>
                             <td$($logFileData.Count)</td>
                         </tr>
-                        $(
-                            if($logFileDataErrors.Count) {
-                            "<tr style=`"background-color: #f78474;`">
-                                <th>Action errors</th>
-                                <td$($logFileDataErrors.Count)</td>
-                            </tr>"
+                        $(if($logFileDataErrors.Count) {
+                            '<tr style="background-color: #f78474;">'
+                        } else {
+                            '<tr>'
                         })
-                        $(
-                            if($systemErrors.Count) {
-                            "<tr style=`"background-color: #f78474;`">
-                                <th>System errors</th>
-                                <td$($systemErrors.Count)</td>
-                            </tr>"
+                            <th>Action errors</th>
+                            <td$($logFileDataErrors.Count)</td>
+                        </tr>
+                        $(if($systemErrors.Count) {
+                            '<tr style="background-color: #f78474;">'
+                        } else {
+                            '<tr>'
                         })
+                            <th>System errors</th>
+                            <td$($systemErrors.Count)</td>
+                        </tr>
                     </table>
 "@
 

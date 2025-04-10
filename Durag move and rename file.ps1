@@ -667,14 +667,14 @@ end {
                 Write-Verbose "Found $($systemErrors.Count) system errors, $($logFileDataErrors.Count) action errors and $($logFileData.Count) action results"
 
                 switch ($sendMail.When) {
-                    'always' {
+                    'Always' {
                         Write-Verbose "Send email to '$($mailParams.To)' with subject '$($mailParams.Subject)' and body '$($mailParams.Message)'"
 
                         Send-MailHC @mailParams
 
                         break
                     }
-                    'onError' {
+                    'OnError' {
                         if ($systemErrors -or $logFileDataErrors) {
                             Write-Verbose "Send email to '$($mailParams.To)' with subject '$($mailParams.Subject)' and body '$($mailParams.Message)'"
 

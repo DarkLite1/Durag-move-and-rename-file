@@ -520,7 +520,12 @@ end {
 
                         $params = @{
                             DataToExport   = $logFileData
-                            PartialPath    = "$baseLogName - Results{0}"
+                            PartialPath    = if ($logFileDataErrors) {
+                                "$baseLogName - Actions with errors{0}"
+                            }
+                            else {
+                                "$baseLogName - Actions{0}"
+                            }
                             FileExtensions = $logFileExtensions
                         }
                         $allLogFilePaths += Out-LogFileHC @params

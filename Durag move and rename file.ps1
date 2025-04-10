@@ -639,12 +639,36 @@ end {
             if ($sendMail.When -ne 'Never') {
                 Write-Verbose "Send email '$($sendMail.When)'"
 
+                $table = @"
+                    <table>
+                        <tr>
+                            <th>Actions</th>
+                            <td$($logFileData.Count)</td>
+                        </tr>
+                        $(
+                            if($logFileDataErrors.Count -gt 0) {
+                            "<tr style=`"background-color: #f78474;`">
+                                <th>Action errors</th>
+                                <td$($logFileDataErrors.Count)</td>
+                            </tr>"
+                        })
+                        $(
+                            if($systemErrors.Count -gt 0) {
+                            "<tr style=`"background-color: #f78474;`">
+                                <th>System errors</th>
+                                <td$($systemErrors.Count)</td>
+                            </tr>"
+                        })
+                    </table>
+"@
+
                 $mailParams = @{
                     To      = $sendMail.To
                     Subject = $sendMail.Subject
-                    Message = $sendMail.Body
+                    Message = '{0} {1}' -f $sendMail.Body, $table
                     Header  = $scriptName
                 }
+
                 if ($logFolderPath) {
                     $mailParams.LogFolder = $logFolderPath
                 }

@@ -1055,45 +1055,163 @@ end {
             }
 
             if ($isSendMail) {
-                $table = @"
-                    <table>
-                        <tr>
-                            <th>Actions</th>
-                            <td>$($logFileData.Count)</td>
-                        </tr>
-                        $(if($logFileDataErrors.Count) {
-                            '<tr style="background-color: #f78474;">'
-                        } else {
-                            '<tr>'
-                        })
-                            <th>Action errors</th>
-                            <td>$($logFileDataErrors.Count)</td>
-                        </tr>
-                        $(if($systemErrors.Count) {
-                            '<tr style="background-color: #f78474;">'
-                        } else {
-                            '<tr>'
-                        })
-                            <th>System errors</th>
-                            <td>$($systemErrors.Count)</td>
-                        </tr>
-                    </table>
-"@
-
                 $mailParams = @{
-                    To      = $sendMail.To
                     Subject = '{0} actions, {1}' -f
                     $logFileData.Count, $sendMail.Subject
-                    Body = '{0} {1}' -f $sendMail.Body, $table
-                    Header  = $scriptName
                 }
 
-                if ($logFolderPath) {
-                    $mailParams.LogFolder = $logFolderPath
+                $mailParams.Body = @"
+<!DOCTYPE html>
+<html>
+    <head>
+        <style type="text/css">
+            body {
+                font-family:verdana;
+                font-size:14px;
+                background-color:white;
+            }
+            h1 {
+                margin-bottom: 0;
+            }
+            h2 {
+                margin-bottom: 0;
+            }
+            h3 {
+                margin-bottom: 0;
+            }
+            p.italic {
+                font-style: italic;
+                font-size: 12px;
+            }
+            table {
+                border-collapse:collapse;
+                border:0px none;
+                padding:3px;
+                text-align:left;
+            }
+            td, th {
+                border-collapse:collapse;
+                border:1px none;
+                padding:3px;
+                text-align:left;
+            }
+            #aboutTable th {
+                color: rgb(143, 140, 140);
+                font-weight: normal;
+            }
+            #aboutTable td {
+                color: rgb(143, 140, 140);
+                font-weight: normal;
+            }
+            base {
+                target="_blank"
+            }
+        </style>
+    </head>
+    <body>
+        <table>
+            <h1>$scriptName</h1>
+            <hr style="border: 0; border-top: 1px solid #cccccc; margin-top: 5px;">
+
+            $($sendMail.Body)
+
+            <table>
+                <tr>
+                    <th>Actions</th>
+                    <td>$($logFileData.Count)</td>
+                </tr>
+                $(
+                    if($logFileDataErrors.Count) {
+                        '<tr style="background-color: #f78474;">'
+                    } else {
+                        '<tr>'
+                    }
+                )
+                    <th>Action errors</th>
+                    <td>$($logFileDataErrors.Count)</td>
+                </tr>
+                $(
+                    if($systemErrors.Count) {
+                        '<tr style="background-color: #f78474;">'
+                    } else {
+                        '<tr>'
+                    }
+                )
+                    <th>System errors</th>
+                    <td>$($systemErrors.Count)</td>
+                </tr>
+            </table>
+
+            $(
+                if ($allLogFilePaths) {
+                    '<p><i>* Check the attachment(s) for details</i></p>'
                 }
+            )
+
+            <h3>About</h3>
+            <hr style="border: 0; border-top: 1px solid #cccccc; margin-top: 5px;">
+            <table id="aboutTable">
+                $(
+                    if ($scriptStartTime) {
+                        '<tr>
+                            <th>Start time</th>
+                            <td>{0:00}/{1:00}/{2:00} {3:00}:{4:00} ({5})</td>
+                        </tr>' -f
+                        $scriptStartTime.Day,
+                        $scriptStartTime.Month,
+                        $scriptStartTime.Year,
+                        $scriptStartTime.Hour,
+                        $scriptStartTime.Minute,
+                        $scriptStartTime.DayOfWeek
+                    }
+                )
+                $(
+                    if ($scriptStartTime) {
+                        $runTime = New-TimeSpan -Start $scriptStartTime -End (Get-Date)
+                        '<tr>
+                            <th>Duration</th>
+                            <td>{0:00}:{1:00}:{2:00}</td>
+                        </tr>' -f
+                        $runTime.Hours, $runTime.Minutes, $runTime.Seconds
+                    }
+                )
+                $(
+                    if ($logFolderPath) {
+                        '<tr>
+                            <th>Log files</th>
+                            <td><a href="{0}">Open log folder</a></td>
+                        </tr>' -f $logFolderPath
+                    }
+                )
+                <tr>
+                    <th>Host</th>
+                    <td>$($host.Name)</td>
+                </tr>
+                <tr>
+                    <th>PowerShell</th>
+                    <td>$($PSVersionTable.PSVersion.ToString())</td>
+                </tr>
+                <tr>
+                    <th>Computer</th>
+                    <td>$env:COMPUTERNAME</td>
+                </tr>
+                <tr>
+                    <th>Account</th>
+                    <td>$env:USERDNSDOMAIN\$env:USERNAME</td>
+                </tr>
+            </table>
+        </table>
+    </body>
+</html>
+"@
+                if ($sendMail.To) {
+                    $mailParams.To = $sendMail.To
+                }
+
                 if ($sendMail.Bcc) {
                     $mailParams.Bcc = $sendMail.Bcc
                 }
+
                 if ($systemErrors -or $logFileDataErrors) {
                     $totalErrorCount = $systemErrors.Count + $logFileDataErrors.Count
 
@@ -1101,21 +1219,14 @@ end {
                     $mailParams.Subject = '{0} errors, {1}' -f
                     $totalErrorCount, $mailParams.Subject
                 }
-                if ($allLogFilePaths) {
-                    $mailParams.Attachments = $allLogFilePaths | Sort-Object -Unique
-                    $mailParams.Body = '{0}{1}' -f $mailParams.Body, '<p><i>* Check the attachment(s) for details</i></p>'
-                }
 
-                Write-Verbose "Mail bcc '$($mailParams.Bcc)'"
-                Write-Verbose "Mail priority '$($mailParams.Priority)'"
-                Write-Verbose "Mail subject '$($mailParams.Subject)'"
-                Write-Verbose "Mail body '$($mailParams.Body)'"
-                Write-Verbose "Mail attachments '$($mailParams.Attachments)'"
-                Write-Verbose "Mail log folder '$($mailParams.LogFolder)'"
+                if ($allLogFilePaths) {
+                    $mailParams.Attachments = $allLogFilePaths |
+                    Sort-Object -Unique
+                }
 
                 Write-Verbose "Found $($systemErrors.Count) system errors, $($logFileDataErrors.Count) action errors and $($logFileData.Count) action results"
 
-                Write-Verbose "Send mail to '$($mailParams.To)'"
                 Send-MailKitMessageHC @mailParams
             }
         }

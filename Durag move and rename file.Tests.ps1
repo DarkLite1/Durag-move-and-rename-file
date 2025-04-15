@@ -46,7 +46,7 @@ BeforeAll {
         ImportFile = $testOutParams.FilePath
     }
 
-    Mock Send-MailHC
+    Mock Send-MailKitMessageHC
     Mock Write-EventLog
 }
 Describe 'the mandatory parameters are' {
@@ -244,11 +244,11 @@ Describe 'when a file fails to move' {
         Should -BeLike  "*Failed to move file '$($testFile.FullName)'*Oops*"
     }
     It 'an email is sent when SendMail.When is Always' {
-        Should -Invoke Send-MailHC -Times 1 -Exactly -Scope Describe -ParameterFilter {
+        Should -Invoke Send-MailKitMessageHC -Times 1 -Exactly -Scope Describe -ParameterFilter {
             ($Priority -eq 'High') -and
             ($To -eq $testInputFile.Settings.SendMail.To) -and
             ($Subject -eq "1 errors, 1 actions, $($testInputFile.Settings.SendMail.Subject)") -and
-            ($Message -like "*$($testInputFile.Settings.SendMail.Body)*<th>Actions</th>*<td>1</td>*<th>Action errors</th>*<td>1</td>*<th>System errors</th>*<td>0</td>*<p><i>* Check the attachment(s) for details</i></p>*") -and
+            ($Body -like "*$($testInputFile.Settings.SendMail.Body)*<th>Actions</th>*<td>1</td>*<th>Action errors</th>*<td>1</td>*<th>System errors</th>*<td>0</td>*<p><i>* Check the attachment(s) for details</i></p>*") -and
             ($Attachments -contains $testLogFiles[0].FullName) -and
             ($Attachments -contains $testLogFiles[1].FullName)
         }

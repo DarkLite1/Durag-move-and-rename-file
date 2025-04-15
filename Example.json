@@ -10,10 +10,22 @@
     "ScriptName": "Durag move and rename file",
     "SendMail": {
       "When": "OnError",
-      "To": ["bob@contoso.com"],
+      "From": "m@example.com",
+      "To": ["007@example.com"],
       "Bcc": [],
       "Subject": "Durag move and rename file",
-      "Body": "<p>Move and rename files for the Durag application.</p>"
+      "Body": "<p>Move and rename files for the Durag application.</p>",
+      "Smtp": {
+        "ServerName": "SMTP_SERVER",
+        "Port": 587,
+        "ConnectionType": "StartTls",
+        "UserName": "ENV:myUsername",
+        "Password": "ENV:myPassword"
+      },
+      "AssemblyPath": {
+        "MailKit": "C:\\Program Files\\PackageManagement\\NuGet\\Packages\\MailKit.4.11.0\\lib\\net8.0\\MailKit.dll",
+        "MimeKit": "C:\\Program Files\\PackageManagement\\NuGet\\Packages\\MimeKit.4.11.0\\lib\\net8.0\\MimeKit.dll"
+      }
     },
     "Log": {
       "What": {

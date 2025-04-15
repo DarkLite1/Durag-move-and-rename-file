@@ -150,7 +150,8 @@ process {
         $eventLogData.Add(
             [PSCustomObject]@{
                 DateTime  = $scriptStartTime
-                Message   = "Found $($filesToProcess.Count) file(s) in source folder '$SourceFolder'"
+                Message   = ("Found {0} file{1} in source folder '$SourceFolder'" -f $filesToProcess.Count,
+                    $(if ($filesToProcess.Count -ne 1) { 's' }))
                 EntryType = 'Information'
                 EventID   = '4'
             }
@@ -254,7 +255,9 @@ process {
         $eventLogData.Add(
             [PSCustomObject]@{
                 DateTime  = $scriptStartTime
-                Message   = "Processed $($logFileData.Count) file(s) in source folder '$SourceFolder'"
+                Message   = ("Processed {0} file{1} in source folder '$SourceFolder'" -f
+                    $logFileData.Count,
+                    $(if ($logFileData.Count -ne 1) { 's' }))
                 EntryType = 'Information'
                 EventID   = '4'
             }
@@ -292,7 +295,10 @@ end {
         ) {
             $logFilePath = $PartialPath -f $fileExtension
 
-            Write-Verbose "Export '$($DataToExport.Count)' objects to '$logFilePath'"
+            $M = "Export {0} object{1} to '$logFilePath'" -f
+            $DataToExport.Count,
+            $(if ($DataToExport.Count -ne 1) { 's' })
+            Write-Verbose $M
 
             switch ($fileExtension) {
                 '.txt' {
@@ -914,11 +920,7 @@ end {
 
                 #region Create log file
                 if ($logFileData) {
-                    Write-Verbose "Result $($logFileData.Count) action(s)"
-
                     if ($isLog.AllActions) {
-                        Write-Verbose 'Export all results'
-
                         $params = @{
                             DataToExport   = $logFileData
                             PartialPath    = if ($logFileDataErrors) {
@@ -933,9 +935,6 @@ end {
                     }
                     elseif ($isLog.OnlyActionErrors) {
                         if ($logFileDataErrors) {
-                            Write-Verbose "$($logFileDataErrors.Count) action errors"
-                            Write-Verbose 'Export result errors'
-
                             $params = @{
                                 DataToExport   = $logFileDataErrors
                                 PartialPath    = "$baseLogName - Action errors{0}"
@@ -943,31 +942,16 @@ end {
                             }
                             $allLogFilePaths += Out-LogFileHC @params
                         }
-                        else {
-                            Write-Verbose 'No action errors'
-                        }
-                    }
-                    else {
-                        Write-Warning "Log file option 'AllActions', 'OnlyActionErrors' or 'SystemErrors' not found. No log file created."
                     }
                 }
 
-                if ($systemErrors) {
-                    Write-Warning "$($systemErrors.Count) system errors found"
-
-                    if ($isLog.SystemErrors) {
-                        Write-Verbose 'Export system errors'
-
-                        $params = @{
-                            DataToExport   = $systemErrors
-                            PartialPath    = "$baseLogName - System errors{0}"
-                            FileExtensions = $logFileExtensions
-                        }
-                        $allLogFilePaths += Out-LogFileHC @params
+                if ($systemErrors -and $isLog.SystemErrors) {
+                    $params = @{
+                        DataToExport   = $systemErrors
+                        PartialPath    = "$baseLogName - System errors{0}"
+                        FileExtensions = $logFileExtensions
                     }
-                    else {
-                        Write-Verbose "Input file option 'Settings.Log.SystemErrors' not true. No log file created."
-                    }
+                    $allLogFilePaths += Out-LogFileHC @params
                 }
                 #endregion
             }
@@ -1285,8 +1269,6 @@ end {
                 }
                 #endregion
 
-                Write-Verbose "Found $($systemErrors.Count) system errors, $($logFileDataErrors.Count) action errors and $($logFileData.Count) action results"
-
                 Write-Verbose "Send email to '$($mailParams.To)' subject '$($mailParams.Subject)'"
 
                 Send-MailKitMessageHC @mailParams
@@ -1329,6 +1311,9 @@ end {
 
             Write-Warning 'Exit script with error code 1'
             exit 1
+        }
+        else {
+            Write-Verbose 'Script finished successfully'
         }
     }
 }

@@ -1083,8 +1083,10 @@ end {
 
                 $mailParams = @{
                     From                = $sendMail.From
-                    Subject             = '{0} actions, {1}' -f
-                    $logFileData.Count, $sendMail.Subject
+                    Subject             = '{0} action{1}, {2}' -f
+                    $logFileData.Count,
+                    $(if ($logFileData.Count -ne 1) { 's' }),
+                    $sendMail.Subject
                     SmtpServerName      = $sendMail.Smtp.ServerName
                     SmtpPort            = $sendMail.Smtp.Port
                     MailKitAssemblyPath = $sendMail.AssemblyPath.MailKit
@@ -1247,8 +1249,10 @@ end {
                     $totalErrorCount = $systemErrors.Count + $logFileDataErrors.Count
 
                     $mailParams.Priority = 'High'
-                    $mailParams.Subject = '{0} errors, {1}' -f
-                    $totalErrorCount, $mailParams.Subject
+                    $mailParams.Subject = '{0} error{1}, {2}' -f
+                    $totalErrorCount,
+                    $(if ($totalErrorCount -ne 1) { 's' }),
+                    $mailParams.Subject
                 }
 
                 if ($allLogFilePaths) {
@@ -1282,6 +1286,8 @@ end {
                 #endregion
 
                 Write-Verbose "Found $($systemErrors.Count) system errors, $($logFileDataErrors.Count) action errors and $($logFileData.Count) action results"
+
+                Write-Verbose "Send email to '$($mailParams.To)' subject '$($mailParams.Subject)'"
 
                 Send-MailKitMessageHC @mailParams
             }

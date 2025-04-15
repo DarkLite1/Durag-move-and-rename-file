@@ -1056,8 +1056,13 @@ end {
 
             if ($isSendMail) {
                 $mailParams = @{
-                    Subject = '{0} actions, {1}' -f
+                    From                = $sendMail.From
+                    Subject             = '{0} actions, {1}' -f
                     $logFileData.Count, $sendMail.Subject
+                    SmtpServerName      = $sendMail.Smtp.ServerName
+                    SmtpPort            = $sendMail.Smtp.Port
+                    MailKitAssemblyPath = $sendMail.AssemblyPath.MailKit
+                    MimeKitAssemblyPath = $sendMail.AssemblyPath.MimeKit
                 }
 
                 $mailParams.Body = @"
@@ -1224,6 +1229,31 @@ end {
                     $mailParams.Attachments = $allLogFilePaths |
                     Sort-Object -Unique
                 }
+
+                if ($sendMail.Smtp.ConnectionType) {
+                    $mailParams.SmtpConnectionType = $sendMail.Smtp.ConnectionType
+                }
+
+                #region Create SMTP credential
+                $smtpPassword = $sendMail.Smtp.UserName
+                $smtpUserName = $sendMail.Smtp.Password
+
+                if ($smtpPassword -and $smtpUserName) {
+                    try {
+                        $securePassword = ConvertTo-SecureString -String $sendMail.Smtp.Password -AsPlainText -Force
+
+                        $credential = New-Object System.Management.Automation.PSCredential($sendMail.Smtp.UserName, $securePassword)
+
+                        $mailParams.Credential = $credential
+                    }
+                    catch {
+                        throw "Failed to create credential: $_"
+                    }
+                }
+                elseif ($smtpPassword -or $smtpUserName) {
+                    throw "Both 'Settings.SendMail.Smtp.Username' and 'Settings.SendMail.Smtp.Password' must be configured if authentication is required."
+                }
+                #endregion
 
                 Write-Verbose "Found $($systemErrors.Count) system errors, $($logFileDataErrors.Count) action errors and $($logFileData.Count) action results"
 

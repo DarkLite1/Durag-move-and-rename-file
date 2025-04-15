@@ -17,10 +17,22 @@ BeforeAll {
         Settings    = @{
             ScriptName = 'Test (Brecht)'
             SendMail   = @{
-                When    = "Always"
-                To      = "bob@example.com"
-                Subject = 'Email subject'
-                Body    = 'Email body'
+                When         = 'Always'
+                From         = 'm@example.com'
+                To           = '007@example.com'
+                Subject      = 'Email subject'
+                Body         = 'Email body'
+                Smtp         = @{
+                    ServerName     = 'SMTP_SERVER'
+                    Port           = 25
+                    ConnectionType = 'StartTls'
+                    UserName       = 'bob'
+                    Password       = 'pass'
+                }
+                AssemblyPath = @{
+                    MailKit = 'C:\MailKit.dll'
+                    MimeKit = 'C:\MimeKit.dll'
+                }
             }
             Log        = @{
                 What  = @{

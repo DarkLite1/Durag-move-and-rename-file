@@ -508,7 +508,7 @@ end {
             [parameter(Mandatory)]
             [string]$SmtpServerName,
             [parameter(Mandatory)]
-            [ValidateRange(0, 65535)]
+            [ValidateSet(25, 465, 587, 2525)]
             [int]$SmtpPort,
             [parameter(Mandatory)]
             [ValidatePattern('^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$')]
@@ -757,16 +757,26 @@ end {
 
                 $smtp = New-Object -TypeName 'MailKit.Net.Smtp.SmtpClient'
 
-                $smtp.Connect(
-                    $SmtpServerName, $SmtpPort,
-                    [MailKit.Security.SecureSocketOptions]::$SmtpConnectionType
-                )
+                try {
+                    $smtp.Connect(
+                        $SmtpServerName, $SmtpPort,
+                        [MailKit.Security.SecureSocketOptions]::$SmtpConnectionType
+                    )
+                }
+                catch {
+                    throw "Failed to connect to SMTP server '$SmtpServerName' on port '$SmtpPort' with connection type '$SmtpConnectionType': $_"
+                }
 
                 if ($Credential) {
-                    $smtp.Authenticate(
-                        $Credential.UserName,
-                        $Credential.GetNetworkCredential().Password
-                    )
+                    try {
+                        $smtp.Authenticate(
+                            $Credential.UserName,
+                            $Credential.GetNetworkCredential().Password
+                        )
+                    }
+                    catch {
+                        throw "Failed to authenticate with user name '$($Credential.UserName)' to SMTP server '$SmtpServerName': $_"
+                    }
                 }
 
                 Write-Verbose "Send mail to '$To' with subject '$Subject'"
@@ -1056,6 +1066,21 @@ end {
             }
 
             if ($isSendMail) {
+                #region Test mandatory fields
+                @{
+                    'From'                 = $sendMail.From
+                    'Subject'              = $sendMail.Subject
+                    'Body'                 = $sendMail.Body
+                    'Smtp.ServerName'      = $sendMail.Smtp.ServerName
+                    'Smtp.Port'            = $sendMail.Smtp.Port
+                    'AssemblyPath.MailKit' = $sendMail.AssemblyPath.MailKit
+                    'AssemblyPath.MimeKit' = $sendMail.AssemblyPath.MimeKit
+                }.GetEnumerator() |
+                Where-Object { -not $_.Value } | ForEach-Object {
+                    throw "Input file property 'Settings.SendMail.$($_.Key)' cannot be blank"
+                }
+                #endregion
+
                 $mailParams = @{
                     From                = $sendMail.From
                     Subject             = '{0} actions, {1}' -f
@@ -1289,10 +1314,6 @@ end {
         Write-Warning $systemErrors[-1].Message
     }
     finally {
-        #region Send email
-
-        #endregion
-
         if ($systemErrors) {
             Write-Warning "Found $($systemErrors.Count) system errors"
 

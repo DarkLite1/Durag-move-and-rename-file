@@ -23,15 +23,15 @@ BeforeAll {
                 Subject      = 'Email subject'
                 Body         = 'Email body'
                 Smtp         = @{
-                    ServerName     = 'SMTP_SERVER'
-                    Port           = 25
+                    ServerName = 'SMTP_SERVER'
+                    Port       = 25
                     ConnectionType = 'StartTls'
-                    UserName       = 'bob'
-                    Password       = 'pass'
+                    UserName   = 'bob'
+                    Password   = 'pass'
                 }
                 AssemblyPath = @{
-                    MailKit = 'C:\MailKit.dll'
-                    MimeKit = 'C:\MimeKit.dll'
+                    MailKit = 'C:\Program Files\PackageManagement\NuGet\Packages\MailKit.4.11.0\lib\net8.0\MailKit.dll'
+                    MimeKit = 'C:\Program Files\PackageManagement\NuGet\Packages\MimeKit.4.11.0\lib\net8.0\MimeKit.dll'
                 }
             }
             SaveLogFiles   = @{

@@ -1251,7 +1251,7 @@ end {
                     }
                 }
                 elseif ($smtpPassword -or $smtpUserName) {
-                    throw "Both 'Settings.SendMail.Smtp.Username' and 'Settings.SendMail.Smtp.Password' must be configured if authentication is required."
+                    throw "Both 'Settings.SendMail.Smtp.Username' and 'Settings.SendMail.Smtp.Password' are required when authentication is needed."
                 }
                 #endregion
 

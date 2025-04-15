@@ -13,7 +13,7 @@
       "To": ["bob@contoso.com"],
       "Bcc": [],
       "Subject": "Durag move and rename file",
-      "Body": "The script 'Durag move and rename file' has finished. Check the log file for details."
+      "Body": "<p>Move and rename files for the Durag application.</p>"
     },
     "Log": {
       "What": {

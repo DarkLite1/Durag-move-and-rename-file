@@ -61,6 +61,38 @@ BeforeAll {
         ImportFile = $testOutParams.FilePath
     }
 
+    function Send-MailKitMessageHC {
+        param (
+            [parameter(Mandatory)]
+            [string]$MailKitAssemblyPath,
+            [parameter(Mandatory)]
+            [string]$MimeKitAssemblyPath,
+            [parameter(Mandatory)]
+            [string]$SmtpServerName,
+            [parameter(Mandatory)]
+            [ValidateSet(25, 465, 587, 2525)]
+            [int]$SmtpPort,
+            [parameter(Mandatory)]
+            [ValidatePattern('^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$')]
+            [string]$From,
+            [parameter(Mandatory)]
+            [string]$Body,
+            [parameter(Mandatory)]
+            [string]$Subject,
+            [string[]]$To,
+            [string[]]$Bcc,
+            [int]$MaxAttachmentSize = 20MB,
+            [ValidateSet(
+                'None', 'Auto', 'SslOnConnect', 'StartTls', 'StartTlsWhenAvailable'
+            )]
+            [string]$SmtpConnectionType = 'None',
+            [ValidateSet('Normal', 'Low', 'High')]
+            [string]$Priority = 'Normal',
+            [string[]]$Attachments,
+            [PSCredential]$Credential
+        )
+    }
+
     Mock Send-MailKitMessageHC
     Mock New-EventLog
     Mock Write-EventLog

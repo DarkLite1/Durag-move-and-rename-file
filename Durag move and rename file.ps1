@@ -859,14 +859,14 @@ end {
         $settings = $jsonFileContent.Settings
 
         $scriptName = $settings.ScriptName
-        $logFolder = $settings.Log.Where.Folder
-        $logFileExtensions = $settings.Log.Where.FileExtensions
+        $logFolder = $settings.SaveLogFiles.Where.Folder
+        $logFileExtensions = $settings.SaveLogFiles.Where.FileExtensions
         $isLog = @{
-            systemErrors     = $settings.Log.What.SystemErrors
-            AllActions       = $settings.Log.What.AllActions
-            OnlyActionErrors = $settings.Log.What.OnlyActionErrors
+            systemErrors     = $settings.SaveLogFiles.What.SystemErrors
+            AllActions       = $settings.SaveLogFiles.What.AllActions
+            OnlyActionErrors = $settings.SaveLogFiles.What.OnlyActionErrors
         }
-        $isLogToEventLog = $settings.Log.Where.EventLog
+        $isLogToEventLog = $settings.SaveLogFiles.Where.EventLog
         $sendMail = $settings.SendMail
 
         $allLogFilePaths = @()
@@ -964,7 +964,7 @@ end {
             catch {
                 $systemErrors += [PSCustomObject]@{
                     DateTime = Get-Date
-                    Message  = "Failed creating log file in folder '$($settings.Log.Where.Folder)': $_"
+                    Message  = "Failed creating log file in folder '$($settings.SaveLogFiles.Where.Folder)': $_"
                 }
 
                 Write-Warning $systemErrors[-1].Message
@@ -1021,7 +1021,7 @@ end {
             }
         }
         else {
-            Write-Verbose "Input file option 'Settings.Log.Where.EventLog' not true, no events created in the event log."
+            Write-Verbose "Input file option 'Settings.SaveLogFiles.Where.EventLog' not true, no events created in the event log."
         }
         #endregion
 

@@ -34,7 +34,7 @@ BeforeAll {
                     MimeKit = 'C:\MimeKit.dll'
                 }
             }
-            Log        = @{
+            SaveLogFiles        = @{
                 What  = @{
                     SystemErrors     = $true
                     AllActions       = $true
@@ -72,7 +72,7 @@ Describe 'create an error log file when' {
         Mock Out-File
 
         $testNewInputFile = Copy-ObjectHC $testInputFile
-        $testNewInputFile.Settings.Log.Where.Folder = 'x:\notExistingLocation'
+        $testNewInputFile.Settings.SaveLogFiles.Where.Folder = 'x:\notExistingLocation'
 
         $testNewInputFile.Source.Folder = (New-Item 'TestDrive:/source' -ItemType Directory).FullName
         $testNewInputFile.Destination.Folder = (New-Item 'TestDrive:/destination' -ItemType Directory).FullName
@@ -227,8 +227,8 @@ Describe 'when a file fails to move' {
 
         $testNewInputFile = Copy-ObjectHC $testInputFile
 
-        $testNewInputFile.Settings.Log.What.AllActions = $false
-        $testNewInputFile.Settings.Log.What.OnlyActionErrors = $true
+        $testNewInputFile.Settings.SaveLogFiles.What.AllActions = $false
+        $testNewInputFile.Settings.SaveLogFiles.What.OnlyActionErrors = $true
 
         $testNewInputFile.Source.Folder = (New-Item 'TestDrive:/source' -ItemType Directory).FullName
         $testNewInputFile.Destination.Folder = (New-Item 'TestDrive:/destination' -ItemType Directory).FullName
@@ -241,7 +241,7 @@ Describe 'when a file fails to move' {
 
         .$testScript @testParams
 
-        $testLogFiles = Get-ChildItem -Path $testInputFile.Settings.Log.Where.Folder -Recurse -File
+        $testLogFiles = Get-ChildItem -Path $testInputFile.Settings.SaveLogFiles.Where.Folder -Recurse -File
     }
     It 'error log files are created for each extension' {
         $testLogFiles | Where-Object { $_.Name -like '* - Action errors.txt' } |

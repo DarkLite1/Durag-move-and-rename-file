@@ -851,7 +851,7 @@ end {
             }
         }
         catch {
-            throw "Failed to write to event log '$LogName' with source '$Source': $_"
+            throw "Failed to write to event log '$LogName' source '$Source': $_"
         }
     }
 
@@ -866,7 +866,7 @@ end {
             AllActions       = $settings.SaveLogFiles.What.AllActions
             OnlyActionErrors = $settings.SaveLogFiles.What.OnlyActionErrors
         }
-        $isLogToEventLog = $settings.SaveLogFiles.Where.EventLog
+        $saveInEventLog = $settings.SaveInEventLog
         $sendMail = $settings.SendMail
 
         $allLogFilePaths = @()
@@ -876,14 +876,14 @@ end {
 
         #region Get script name
         if (-not $scriptName) {
-            Write-Warning "ScriptName not found in import file, using default."
+            Write-Warning "No 'Settings.ScriptName' found in import file."
             $scriptName = 'Default script name'
         }
         #endregion
 
         #region Create log files
-        if ($logFolder -and $logFileExtensions) {
-            try {
+        try {
+            if ($logFolder -and $logFileExtensions) {
                 #region Get log folder
                 try {
                     $logFolderPath = Get-LogFolderHC -Path $logFolder
@@ -961,20 +961,20 @@ end {
                 }
                 #endregion
             }
-            catch {
-                $systemErrors += [PSCustomObject]@{
-                    DateTime = Get-Date
-                    Message  = "Failed creating log file in folder '$($settings.SaveLogFiles.Where.Folder)': $_"
-                }
-
-                Write-Warning $systemErrors[-1].Message
+        }
+        catch {
+            $systemErrors += [PSCustomObject]@{
+                DateTime = Get-Date
+                Message  = "Failed creating log file in folder '$($settings.SaveLogFiles.Where.Folder)': $_"
             }
+
+            Write-Warning $systemErrors[-1].Message
         }
         #endregion
 
         #region Write events to event log
-        if ($isLogToEventLog) {
-            try {
+        try {
+            if ($saveInEventLog.Save -and $saveInEventLog.LogName) {
                 $systemErrors | ForEach-Object {
                     $eventLogData.Add(
                         [PSCustomObject]@{
@@ -997,31 +997,32 @@ end {
 
                 $params = @{
                     Source  = $scriptName
-                    LogName = 'HCScripts'
+                    LogName = $saveInEventLog.LogName
                     Events  = $eventLogData
                 }
                 Write-EventsToEventLogHC @params
+
             }
-            catch {
-                $systemErrors += [PSCustomObject]@{
-                    DateTime = Get-Date
-                    Message  = "Failed writing events to event log: $_"
-                }
-
-                Write-Warning $systemErrors[-1].Message
-
-                if ($baseLogName) {
-                    $params = @{
-                        DataToExport   = $systemErrors[-1]
-                        PartialPath    = "$baseLogName - Errors{0}"
-                        FileExtensions = $logFileExtensions
-                    }
-                    $allLogFilePaths += Out-LogFileHC @params
-                }
+            elseif ($saveInEventLog.Save -or $saveInEventLog.LogName) {
+                throw "Both 'Settings.SaveInEventLog.Save' and 'Settings.SaveInEventLog.LogName' are required to save events in the event log."
             }
         }
-        else {
-            Write-Verbose "Input file option 'Settings.SaveLogFiles.Where.EventLog' not true, no events created in the event log."
+        catch {
+            $systemErrors += [PSCustomObject]@{
+                DateTime = Get-Date
+                Message  = "Failed writing events to event log: $_"
+            }
+
+            Write-Warning $systemErrors[-1].Message
+
+            if ($baseLogName) {
+                $params = @{
+                    DataToExport   = $systemErrors[-1]
+                    PartialPath    = "$baseLogName - Errors{0}"
+                    FileExtensions = $logFileExtensions
+                }
+                $allLogFilePaths += Out-LogFileHC @params
+            }
         }
         #endregion
 

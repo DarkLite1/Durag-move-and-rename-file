@@ -35,9 +35,12 @@
       },
       "Where": {
         "Folder": "..\\Logs",
-        "FileExtensions": [".xlsx", ".txt", ".csv"],
-        "EventLog": false
+        "FileExtensions": [".xlsx", ".txt", ".csv"]
       }
+    },
+    "SaveInEventLog": {
+      "Save": false,
+      "LogName": "Scripts"
     }
   },
   "?": {

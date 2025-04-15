@@ -15,8 +15,8 @@ BeforeAll {
             Folder = (New-Item 'TestDrive:/d' -ItemType Directory).FullName
         }
         Settings    = @{
-            ScriptName = 'Test (Brecht)'
-            SendMail   = @{
+            ScriptName     = 'Test (Brecht)'
+            SendMail       = @{
                 When         = 'Always'
                 From         = 'm@example.com'
                 To           = '007@example.com'
@@ -34,7 +34,7 @@ BeforeAll {
                     MimeKit = 'C:\MimeKit.dll'
                 }
             }
-            SaveLogFiles        = @{
+            SaveLogFiles   = @{
                 What  = @{
                     SystemErrors     = $true
                     AllActions       = $true
@@ -43,8 +43,11 @@ BeforeAll {
                 Where = @{
                     Folder         = (New-Item 'TestDrive:/log' -ItemType Directory).FullName
                     FileExtensions = @('.txt', '.csv')
-                    EventLog       = $true
                 }
+            }
+            SaveInEventLog = @{
+                Save    = $true
+                LogName = 'Scripts'
             }
         }
     }
@@ -59,6 +62,7 @@ BeforeAll {
     }
 
     Mock Send-MailKitMessageHC
+    Mock New-EventLog
     Mock Write-EventLog
 }
 Describe 'the mandatory parameters are' {

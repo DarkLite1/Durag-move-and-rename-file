@@ -1146,8 +1146,6 @@ end {
                 #region Test mandatory fields
                 @{
                     'From'                 = $sendMail.From
-                    'Subject'              = $sendMail.Subject
-                    'Body'                 = $sendMail.Body
                     'Smtp.ServerName'      = $sendMail.Smtp.ServerName
                     'Smtp.Port'            = $sendMail.Smtp.Port
                     'AssemblyPath.MailKit' = $sendMail.AssemblyPath.MailKit
@@ -1160,10 +1158,9 @@ end {
 
                 $mailParams = @{
                     From                = Get-StringValueHC $sendMail.From
-                    Subject             = '{0} action{1}, {2}' -f
+                    Subject             = '{0} action{1}' -f
                     $logFileData.Count,
-                    $(if ($logFileData.Count -ne 1) { 's' }),
-                    $sendMail.Subject
+                    $(if ($logFileData.Count -ne 1) { 's' })
                     SmtpServerName      = Get-StringValueHC $sendMail.Smtp.ServerName
                     SmtpPort            = Get-StringValueHC $sendMail.Smtp.Port
                     MailKitAssemblyPath = Get-StringValueHC $sendMail.AssemblyPath.MailKit
@@ -1314,6 +1311,12 @@ end {
     </body>
 </html>
 "@
+
+                if ($sendMail.Subject) {
+                    $mailParams.Subject = '{0}, {1}' -f
+                    $mailParams.Subject, $sendMail.Subject
+                }
+
                 if ($sendMail.To) {
                     $mailParams.To = $sendMail.To
                 }

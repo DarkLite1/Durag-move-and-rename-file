@@ -10,17 +10,17 @@
     "ScriptName": "Durag move and rename file",
     "SendMail": {
       "When": "OnError",
-      "From": "m@example.com",
+      "From": "ENV:SCRIPT_ADMIN_EMAIL_ADDRESS",
       "To": ["007@example.com"],
       "Bcc": [],
-      "Subject": "Durag move and rename file",
-      "Body": "<p>Move and rename files for the Durag application.</p>",
+      "Subject": "",
+      "Body": "<p>The script does action xxx.</p>",
       "Smtp": {
-        "ServerName": "SMTP_SERVER",
+        "ServerName": "ENV:SMTP_SERVER",
         "Port": 587,
         "ConnectionType": "StartTls",
-        "UserName": "ENV:myUsername",
-        "Password": "ENV:myPassword"
+        "UserName": "ENV:SMTP_USER_NAME",
+        "Password": "ENV:SMTP_PASSWORD"
       },
       "AssemblyPath": {
         "MailKit": "C:\\Program Files\\PackageManagement\\NuGet\\Packages\\MailKit.4.11.0\\lib\\net8.0\\MailKit.dll",
@@ -50,10 +50,10 @@
       "SendMail": {
         "When": "(Mandatory) Specifies when to send an email notification. Possible values: 'OnError' - Send email only when a system error or an action error occurs; 'OnErrorOrAction' - Send email when the script performed actions or when errors occurred; 'Always' - Send email when the script is finished, regardless of success or failure; 'Never' - Do not send email.",
         "From": "(Mandatory) The sender's email address. Supports environment variables (e.g., 'ENV:MAIL_FROM_ADDRESS').",
-        "To": "(Mandatory To or Bcc) An array of recipient email addresses. The script will send an email to all addresses in the array.",
-        "Bcc": "(Mandatory To or Bcc) An array of BCC email addresses.",
-        "Subject": "(Mandatory) The subject line of the email.",
-        "Body": "(Mandatory) The HTML body of the email.",
+        "To": "(Mandatory 'To' or 'Bcc') An array of recipient email addresses. The script will send an email to all addresses in the array.",
+        "Bcc": "(Mandatory 'To' or 'Bcc') An array of BCC email addresses.",
+        "Subject": "(Optional) The subject line of the email. Default value: 'N actions, N errors'",
+        "Body": "(Optional) The HTML body of the email. Default value: A summary table with action and error count.",
         "Smtp": {
           "ServerName": "(Mandatory) The hostname or IP address of the SMTP server. Supports environment variables (e.g., 'ENV:SMTP_SERVER').",
           "Port": "(Mandatory) The port number of the SMTP server. Possible values: 25, 465, 587, 2525. Supports environment variables (e.g., 'ENV:SMTP_PORT').",

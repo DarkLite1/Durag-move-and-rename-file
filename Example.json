@@ -63,7 +63,7 @@
         },
         "AssemblyPath": {
           "MailKit": "(Mandatory) Path to the MailKit.dll assembly. Supports environment variables (e.g., 'ENV:MAILKIT_ASSEMBLY').",
-          "MimeKit": "(Mandatory) Path to the MimeKit.dll assembly. Possible values: A text string representing the path, or 'ENV:yourVariableName' to read from an environment variable. Supports environment variables (e.g., 'ENV:MIMEKIT_ASSEMBLY')."
+          "MimeKit": "(Mandatory) Path to the MimeKit.dll assembly. Supports environment variables (e.g., 'ENV:MIMEKIT_ASSEMBLY')."
         }
       },
       "SaveLogFiles": {

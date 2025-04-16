@@ -928,16 +928,9 @@ end {
         $settings = $jsonFileContent.Settings
 
         $scriptName = $settings.ScriptName
-        $logFolder = $settings.SaveLogFiles.Where.Folder
-        $logFileExtensions = $settings.SaveLogFiles.Where.FileExtensions
-        $isLog = @{
-            systemErrors     = $settings.SaveLogFiles.What.SystemErrors
-            AllActions       = $settings.SaveLogFiles.What.AllActions
-            OnlyActionErrors = $settings.SaveLogFiles.What.OnlyActionErrors
-        }
         $saveInEventLog = $settings.SaveInEventLog
         $sendMail = $settings.SendMail
-        $deleteLogsAfterDays = $settings.SaveLogFiles.DeleteLogsAfterDays
+        $saveLogFiles = $settings.SaveLogFiles
 
         $allLogFilePaths = @()
         $logFileDataErrors = $logFileData.Where({ $_.Error })
@@ -953,7 +946,14 @@ end {
 
         #region Create log files
         try {
-            $logFolder = Get-StringValueHC $logFolder
+            $logFolder = Get-StringValueHC $saveLogFiles.Where.Folder
+
+            $logFileExtensions = $saveLogFiles.Where.FileExtensions
+            $isLog = @{
+                systemErrors     = $saveLogFiles.What.SystemErrors
+                allActions       = $saveLogFiles.What.AllActions
+                onlyActionErrors = $saveLogFiles.What.OnlyActionErrors
+            }
 
             if ($logFolder -and $logFileExtensions) {
                 #region Get log folder
@@ -976,7 +976,7 @@ end {
 
                 #region Create log file
                 if ($logFileData) {
-                    if ($isLog.AllActions) {
+                    if ($isLog.allActions) {
                         $params = @{
                             DataToExport   = $logFileData
                             PartialPath    = if ($logFileDataErrors) {
@@ -989,7 +989,7 @@ end {
                         }
                         $allLogFilePaths += Out-LogFileHC @params
                     }
-                    elseif ($isLog.OnlyActionErrors) {
+                    elseif ($isLog.onlyActionErrors) {
                         if ($logFileDataErrors) {
                             $params = @{
                                 DataToExport   = $logFileDataErrors
@@ -1015,7 +1015,7 @@ end {
         catch {
             $systemErrors += [PSCustomObject]@{
                 DateTime = Get-Date
-                Message  = "Failed creating log file in folder '$($settings.SaveLogFiles.Where.Folder)': $_"
+                Message  = "Failed creating log file in folder '$($saveLogFiles.Where.Folder)': $_"
             }
 
             Write-Warning $systemErrors[-1].Message
@@ -1023,8 +1023,8 @@ end {
         #endregion
 
         #region Remove old log files
-        if ($deleteLogsAfterDays -gt 0 -and $logFolderPath) {
-            $cutoffDate = (Get-Date).AddDays(-$deleteLogsAfterDays)
+        if ($saveLogFiles.DeleteLogsAfterDays -gt 0 -and $logFolderPath) {
+            $cutoffDate = (Get-Date).AddDays(-$saveLogFiles.DeleteLogsAfterDays)
 
             Write-Verbose "Removing log files older than $cutoffDate from '$logFolderPath'"
 

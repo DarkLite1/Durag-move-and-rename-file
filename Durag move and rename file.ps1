@@ -1009,7 +1009,7 @@ end {
 
             Write-Warning $systemErrors[-1].Message
 
-            if ($baseLogName) {
+            if ($baseLogName -and $isLog.systemErrors) {
                 $params = @{
                     DataToExport   = $systemErrors[-1]
                     PartialPath    = "$baseLogName - Errors{0}"
@@ -1282,7 +1282,7 @@ end {
 
             Write-Warning $systemErrors[-1].Message
 
-            if ($baseLogName) {
+            if ($baseLogName -and $isLog.systemErrors) {
                 $params = @{
                     DataToExport   = $systemErrors[-1]
                     PartialPath    = "$baseLogName - Errors{0}"

@@ -36,7 +36,8 @@
       "Where": {
         "Folder": "..\\Logs",
         "FileExtensions": [".xlsx", ".txt", ".csv"]
-      }
+      },
+      "DeleteLogsAfterDays": 30
     },
     "SaveInEventLog": {
       "Save": false,
@@ -45,22 +46,41 @@
   },
   "?": {
     "Settings": {
-      "ScriptName": "Name of the script, used in the log files and in the event logs",
+      "ScriptName": "(Mandatory) Name of the script, used in the log files and in the event logs",
       "SendMail": {
-        "To": "An array of email addresses. The script will send an email to all addresses in the array.",
-        "When": "Value 'OnError' : Send email only when a system error or an action error occurs. Value 'OnErrorOrAction' : Send email when the script performed actions or when errors occurred. Value 'Always' : Send email when the script is finished, regardless of success or failure. Value 'Never' : Do not send email."
+        "When": "(Mandatory) Specifies when to send an email notification. Value 'OnError' : Send email only when a system error or an action error occurs. Value 'OnErrorOrAction' : Send email when the script performed actions or when errors occurred. Value 'Always' : Send email when the script is finished, regardless of success or failure. Value 'Never' : Do not send email.",
+        "From": "(Mandatory) The sender's email address.",
+        "To": "(Mandatory To or Bcc) An array of recipient email addresses. The script will send an email to all addresses in the array.",
+        "Bcc": "(Mandatory To or Bcc) An array of BCC email addresses.",
+        "Subject": "(Mandatory) The subject line of the email.",
+        "Body": "(Mandatory) The HTML body of the email.",
+        "Smtp": {
+          "ServerName": "(Mandatory) The hostname or IP address of the SMTP server.",
+          "Port": "(Mandatory) The port number of the SMTP server. Possible values: 25, 465, 587, 2525",
+          "ConnectionType": "(Optional) The connection type for the SMTP server. Possible values: 'None', 'Auto', 'SslOnConnect', 'StartTls', 'StartTlsWhenAvailable'. Default value: 'None'",
+          "UserName": "(Mandatory) The username for authenticating with the SMTP server. Use 'ENV:yourVariableName' to read from an environment variable or use a string 'yourUserName'",
+          "Password": "(Mandatory) The password for authenticating with the SMTP server. Use 'ENV:yourVariableName' to read from an environment variable or use a string 'yourPassword'"
+        },
+        "AssemblyPath": {
+          "MailKit": "(Mandatory) The absolute path to the MailKit.dll assembly.",
+          "MimeKit": "(Mandatory) The absolute path to the MimeKit.dll assembly."
+        }
       },
-      "Log": {
+      "SaveLogFiles": {
         "What": {
-          "SystemErrors": "Value TRUE : Log execution errors, incorrect input file errors, ... Value FALSE : Do not log errors.",
-          "AllActions": "Value TRUE : Log all actions. Value FALSE : Do not log actions, not even on action errors.",
-          "OnlyActionErrors": "Value TRUE : Log only actions that failed. Value FALSE : Do not log failed actions. Ignore the value when AllActions is TRUE."
+          "SystemErrors": "(Mandatory) Whether to log execution errors, incorrect input file errors, etc. Possible values: true or false.",
+          "AllActions": "(Mandatory) Whether to log all actions performed by the script, including errors. Possible values: true or false.",
+          "OnlyActionErrors": "(Mandatory) Whether to log only actions that failed. Possible values: true or false."
         },
         "Where": {
-          "Folder": "Value '..\\Logs' : Path relative to the script. Value 'C:\\MyApp\\Logs' : An absolute path. Value NULL : Create no log file.",
-          "FileExtensions": "Value ['.xlsx'] : Create an Excel log file. To create Excel log files the module 'ImportExcel' must be installed (`Install-Module -Name ImportExcel`). Value ['.txt'] : Create a text log file. Value ['.csv'] : Create a comma separated log file. Multiple values are supported. The FileExtension is ignored when LogFolder is NULL.",
-          "EventLog": "Value TRUE : Log verbose to event log. Value FALSE : Do not log messages to the event log."
-        }
+          "Folder": "(Mandatory) Value '..\\Logs': Path relative to the script. Value 'C:\\MyApp\\Logs': An absolute path. If not specified or NULL, no log files will be created.",
+          "FileExtensions": "(Mandatory) An array of file extensions for the log files (e.g., ['.xlsx'], ['.txt'], ['.csv']). Multiple values are supported. '.xlsx' requires the 'ImportExcel' PowerShell module. Ignored when Folder is NULL."
+        },
+        "DeleteLogsAfterDays": "(Optional) The number of days to keep log files. Log files older than this value will be removed. If not specified or 0, logs will be kept indefinitely."
+      },
+      "SaveInEventLog": {
+        "Save": "(Mandatory) Whether to log messages to the Windows event log. Possible values: true or false.",
+        "LogName": "(Mandatory) The name of the event log to write to (e.g., 'Application', 'System', or a custom log name like 'Scripts')."
       }
     }
   }

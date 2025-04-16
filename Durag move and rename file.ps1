@@ -861,7 +861,7 @@ end {
                     ErrorAction = 'Stop'
                 }
 
-                Write-Verbose "Write event to log '$LogName' source '$Source' with message '$($params.Message)'"
+                Write-Verbose "Write event to log '$LogName' source '$Source' message '$($params.Message)'"
 
                 Write-EventLog @params
             }

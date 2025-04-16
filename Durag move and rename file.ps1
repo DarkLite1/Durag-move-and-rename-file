@@ -937,6 +937,7 @@ end {
         }
         $saveInEventLog = $settings.SaveInEventLog
         $sendMail = $settings.SendMail
+        $deleteLogsAfterDays = $settings.SaveLogFiles.DeleteLogsAfterDays
 
         $allLogFilePaths = @()
         $logFileDataErrors = $logFileData.Where({ $_.Error })
@@ -1018,6 +1019,41 @@ end {
             }
 
             Write-Warning $systemErrors[-1].Message
+        }
+        #endregion
+
+        #region Remove old log files
+        if ($deleteLogsAfterDays -gt 0 -and $logFolderPath) {
+            $cutoffDate = (Get-Date).AddDays(-$deleteLogsAfterDays)
+
+            Write-Verbose "Removing log files older than $cutoffDate from '$logFolderPath'"
+
+            Get-ChildItem -Path $logFolderPath -File |
+            Where-Object { $_.LastWriteTime -lt $cutoffDate } |
+            ForEach-Object {
+                try {
+                    $fileToRemove = $_
+                    Write-Verbose "Deleting old log file '$_''"
+                    Remove-Item -Path $_.FullName -Force
+                }
+                catch {
+                    $systemErrors += [PSCustomObject]@{
+                        DateTime = Get-Date
+                        Message  = "Failed to remove file '$fileToRemove': $_"
+                    }
+
+                    Write-Warning $systemErrors[-1].Message
+
+                    if ($baseLogName -and $isLog.systemErrors) {
+                        $params = @{
+                            DataToExport   = $systemErrors[-1]
+                            PartialPath    = "$baseLogName - Errors{0}"
+                            FileExtensions = $logFileExtensions
+                        }
+                        $allLogFilePaths += Out-LogFileHC @params
+                    }
+                }
+            }
         }
         #endregion
 

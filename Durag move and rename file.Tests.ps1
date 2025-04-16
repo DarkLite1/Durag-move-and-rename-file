@@ -44,6 +44,7 @@ BeforeAll {
                     Folder         = (New-Item 'TestDrive:/log' -ItemType Directory).FullName
                     FileExtensions = @('.txt', '.csv')
                 }
+                deleteLogsAfterDays = 1
             }
             SaveInEventLog = @{
                 Save    = $true

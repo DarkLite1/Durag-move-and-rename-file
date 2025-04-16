@@ -58,8 +58,8 @@
           "ServerName": "(Mandatory) The hostname or IP address of the SMTP server.",
           "Port": "(Mandatory) The port number of the SMTP server. Possible values: 25, 465, 587, 2525",
           "ConnectionType": "(Optional) The connection type for the SMTP server. Possible values: 'None', 'Auto', 'SslOnConnect', 'StartTls', 'StartTlsWhenAvailable'. Default value: 'None'",
-          "UserName": "(Mandatory) The username for authenticating with the SMTP server. Use 'ENV:yourVariableName' to read from an environment variable or use a string 'yourUserName'",
-          "Password": "(Mandatory) The password for authenticating with the SMTP server. Use 'ENV:yourVariableName' to read from an environment variable or use a string 'yourPassword'"
+          "UserName": "(Optional) The username for authenticating with the SMTP server. Possible values: A string representing the username, or 'ENV:yourVariableName' to read from an environment variable. If undefined or NULL, no authentication is attempted.",
+          "Password": "(Optional) The password for authenticating with the SMTP server. Possible values: A string representing the password, or 'ENV:yourVariableName' to read from an environment variable. If undefined or NULL, no authentication is attempted."
         },
         "AssemblyPath": {
           "MailKit": "(Mandatory) The absolute path to the MailKit.dll assembly.",

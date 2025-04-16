@@ -19,7 +19,7 @@
         "ServerName": "ENV:SMTP_SERVER",
         "Port": 587,
         "ConnectionType": "StartTls",
-        "UserName": "ENV:SMTP_USER_NAME",
+        "UserName": "ENV:SMTP_USERNAME",
         "Password": "ENV:SMTP_PASSWORD"
       },
       "AssemblyPath": {

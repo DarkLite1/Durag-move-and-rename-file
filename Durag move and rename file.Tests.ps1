@@ -23,11 +23,11 @@ BeforeAll {
                 Subject      = 'Email subject'
                 Body         = 'Email body'
                 Smtp         = @{
-                    ServerName = 'SMTP_SERVER'
-                    Port       = 25
+                    ServerName     = 'SMTP_SERVER'
+                    Port           = 25
                     ConnectionType = 'StartTls'
-                    UserName   = 'bob'
-                    Password   = 'pass'
+                    UserName       = 'bob'
+                    Password       = 'pass'
                 }
                 AssemblyPath = @{
                     MailKit = 'C:\Program Files\PackageManagement\NuGet\Packages\MailKit.4.11.0\lib\net8.0\MailKit.dll'
@@ -35,12 +35,12 @@ BeforeAll {
                 }
             }
             SaveLogFiles   = @{
-                What  = @{
+                What                = @{
                     SystemErrors     = $true
                     AllActions       = $true
                     OnlyActionErrors = $false
                 }
-                Where = @{
+                Where               = @{
                     Folder         = (New-Item 'TestDrive:/log' -ItemType Directory).FullName
                     FileExtensions = @('.txt', '.csv')
                 }

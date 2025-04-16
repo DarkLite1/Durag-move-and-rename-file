@@ -871,6 +871,59 @@ end {
         }
     }
 
+    function Get-StringValueHC {
+        <#
+        .SYNOPSIS
+            Retrieve a string from the environment variables or a regular string.
+
+        .DESCRIPTION
+            This function checks the 'Name' property. If the value starts with
+            'ENV:', it attempts to retrieve the string value from the specified
+            environment variable. Otherwise, it returns the value directly.
+
+        .PARAMETER Name
+            Either a string starting with 'ENV:'; a plain text string or NULL.
+
+        .EXAMPLE
+            Get-StringValueHC -Name 'ENV:passwordVariable'
+
+            # Output: the environment variable value of $ENV:passwordVariable
+            # or an error when the variable does not exist
+
+        .EXAMPLE
+            Get-StringValueHC -Name 'mySecretPassword'
+
+            # Output: mySecretPassword
+
+        .EXAMPLE
+            Get-StringValueHC -Name ''
+
+            # Output: NULL
+        #>
+        param (
+            [String]$Name
+        )
+
+        if (-not $Name) {
+            return $null
+        }
+        elseif (
+            $Name.StartsWith('ENV:', [System.StringComparison]::OrdinalIgnoreCase)
+        ) {
+            $envVariableName = $Name.Substring(4).Trim()
+            $envStringValue = Get-Item -Path "Env:\$envVariableName" -EA Ignore
+            if ($envStringValue) {
+                return $envStringValue.Value
+            }
+            else {
+                throw "Environment variable '$envVariableName' not found."
+            }
+        }
+        else {
+            return $Name
+        }
+    }
+
     try {
         $settings = $jsonFileContent.Settings
 
@@ -899,6 +952,8 @@ end {
 
         #region Create log files
         try {
+            $logFolder = Get-StringValueHC $logFolder
+
             if ($logFolder -and $logFileExtensions) {
                 #region Get log folder
                 try {
@@ -968,6 +1023,8 @@ end {
 
         #region Write events to event log
         try {
+            $saveInEventLog.LogName = Get-StringValueHC $saveInEventLog.LogName
+
             if ($saveInEventLog.Save -and $saveInEventLog.LogName) {
                 $systemErrors | ForEach-Object {
                     $eventLogData.Add(
@@ -1066,15 +1123,15 @@ end {
                 #endregion
 
                 $mailParams = @{
-                    From                = $sendMail.From
+                    From                = Get-StringValueHC $sendMail.From
                     Subject             = '{0} action{1}, {2}' -f
                     $logFileData.Count,
                     $(if ($logFileData.Count -ne 1) { 's' }),
                     $sendMail.Subject
-                    SmtpServerName      = $sendMail.Smtp.ServerName
-                    SmtpPort            = $sendMail.Smtp.Port
-                    MailKitAssemblyPath = $sendMail.AssemblyPath.MailKit
-                    MimeKitAssemblyPath = $sendMail.AssemblyPath.MimeKit
+                    SmtpServerName      = Get-StringValueHC $sendMail.Smtp.ServerName
+                    SmtpPort            = Get-StringValueHC $sendMail.Smtp.Port
+                    MailKitAssemblyPath = Get-StringValueHC $sendMail.AssemblyPath.MailKit
+                    MimeKitAssemblyPath = Get-StringValueHC $sendMail.AssemblyPath.MimeKit
                 }
 
                 $mailParams.Body = @"
@@ -1245,12 +1302,12 @@ end {
                 }
 
                 if ($sendMail.Smtp.ConnectionType) {
-                    $mailParams.SmtpConnectionType = $sendMail.Smtp.ConnectionType
+                    $mailParams.SmtpConnectionType = Get-StringValueHC $sendMail.Smtp.ConnectionType
                 }
 
                 #region Create SMTP credential
-                $smtpPassword = $sendMail.Smtp.UserName
-                $smtpUserName = $sendMail.Smtp.Password
+                $smtpPassword = Get-StringValueHC $sendMail.Smtp.UserName
+                $smtpUserName = Get-StringValueHC $sendMail.Smtp.Password
 
                 if ($smtpPassword -and $smtpUserName) {
                     try {

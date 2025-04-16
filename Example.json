@@ -49,21 +49,21 @@
       "ScriptName": "(Mandatory) Name of the script, used in the log files and in the event logs",
       "SendMail": {
         "When": "(Mandatory) Specifies when to send an email notification. Possible values: 'OnError' - Send email only when a system error or an action error occurs; 'OnErrorOrAction' - Send email when the script performed actions or when errors occurred; 'Always' - Send email when the script is finished, regardless of success or failure; 'Never' - Do not send email.",
-        "From": "(Mandatory) The sender's email address.",
+        "From": "(Mandatory) The sender's email address. Supports environment variables (e.g., 'ENV:MAIL_FROM_ADDRESS').",
         "To": "(Mandatory To or Bcc) An array of recipient email addresses. The script will send an email to all addresses in the array.",
         "Bcc": "(Mandatory To or Bcc) An array of BCC email addresses.",
         "Subject": "(Mandatory) The subject line of the email.",
         "Body": "(Mandatory) The HTML body of the email.",
         "Smtp": {
-          "ServerName": "(Mandatory) The hostname or IP address of the SMTP server.",
-          "Port": "(Mandatory) The port number of the SMTP server. Possible values: 25, 465, 587, 2525",
-          "ConnectionType": "(Optional) The connection type for the SMTP server. Possible values: 'None' - No encryption; 'Auto' - Attempt TLS, fall back to unencrypted; 'SslOnConnect' - Use SSL from the beginning; 'StartTls' - Start with unencrypted, then upgrade to TLS; 'StartTlsWhenAvailable' - Start with unencrypted, upgrade to TLS if supported. Default value: 'None'",
-          "UserName": "(Optional) The username for authenticating with the SMTP server. Possible values: A string representing the username, or 'ENV:yourVariableName' to read from an environment variable. If undefined or NULL, no authentication is attempted.",
-          "Password": "(Optional) The password for authenticating with the SMTP server. Possible values: A string representing the password, or 'ENV:yourVariableName' to read from an environment variable. If undefined or NULL, no authentication is attempted."
+          "ServerName": "(Mandatory) The hostname or IP address of the SMTP server. Supports environment variables (e.g., 'ENV:SMTP_SERVER').",
+          "Port": "(Mandatory) The port number of the SMTP server. Possible values: 25, 465, 587, 2525. Supports environment variables (e.g., 'ENV:SMTP_PORT').",
+          "ConnectionType": "(Optional) The connection type for the SMTP server. Possible values: 'None' - No encryption; 'Auto' - Attempt TLS, fall back to unencrypted; 'SslOnConnect' - Use SSL from the beginning; 'StartTls' - Start with unencrypted, then upgrade to TLS; 'StartTlsWhenAvailable' - Start with unencrypted, upgrade to TLS if supported. Default value: 'None'. Supports environment variables (e.g., 'ENV:SMTP_CONNECTION_TYPE').",
+          "UserName": "(Optional) The username for authenticating with the SMTP server. If undefined or NULL, no authentication is attempted. Supports environment variables (e.g., 'ENV:SMTP_USERNAME').",
+          "Password": "(Optional) The password for authenticating with the SMTP server. If undefined or NULL, no authentication is attempted. Supports environment variables (e.g., 'ENV:SMTP_PASSWORD')."
         },
         "AssemblyPath": {
-          "MailKit": "(Mandatory) The absolute path to the MailKit.dll assembly.",
-          "MimeKit": "(Mandatory) The absolute path to the MimeKit.dll assembly."
+          "MailKit": "(Mandatory) Path to the MailKit.dll assembly. Supports environment variables (e.g., 'ENV:MAILKIT_ASSEMBLY').",
+          "MimeKit": "(Mandatory) Path to the MimeKit.dll assembly. Possible values: A text string representing the path, or 'ENV:yourVariableName' to read from an environment variable. Supports environment variables (e.g., 'ENV:MIMEKIT_ASSEMBLY')."
         }
       },
       "SaveLogFiles": {
@@ -73,14 +73,14 @@
           "OnlyActionErrors": "(Mandatory) Whether to log only actions that failed. Possible values: true or false."
         },
         "Where": {
-          "Folder": "(Mandatory) The path to the folder where log files will be created. Value '..\\Logs': Path relative to the script. Value 'C:\\MyApp\\Logs': An absolute path. If not specified or NULL, no log files will be created.",
+          "Folder": "(Mandatory) The path to the folder where log files will be created. Value '..\\Logs': Path relative to the script. Value 'C:\\MyApp\\Logs': An absolute path. If not specified or NULL, no log files will be created. Supports environment variables (e.g., 'ENV:LOG_FOLDER').",
           "FileExtensions": "(Mandatory) An array of file extensions for the log files (e.g., ['.xlsx'], ['.txt'], ['.csv']). Multiple values are supported. '.xlsx' requires the 'ImportExcel' PowerShell module. Ignored when Folder is NULL."
         },
         "DeleteLogsAfterDays": "(Optional) The number of days to keep log files. Log files older than this value will be removed. If not specified or 0, logs will be kept indefinitely."
       },
       "SaveInEventLog": {
         "Save": "(Mandatory) Whether to log messages to the Windows event log. Possible values: true or false.",
-        "LogName": "(Mandatory) The name of the event log to write to (e.g., 'Application', 'System', or a custom log name like 'Scripts')."
+        "LogName": "(Mandatory) The name of the event log to write to (e.g., 'Application', 'System', or a custom log name like 'Scripts'). Supports environment variables (e.g., 'ENV:EVENT_LOG_NAME')."
       }
     }
   }

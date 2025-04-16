@@ -48,7 +48,7 @@
     "Settings": {
       "ScriptName": "(Mandatory) Name of the script, used in the log files and in the event logs",
       "SendMail": {
-        "When": "(Mandatory) Specifies when to send an email notification. Value 'OnError' : Send email only when a system error or an action error occurs. Value 'OnErrorOrAction' : Send email when the script performed actions or when errors occurred. Value 'Always' : Send email when the script is finished, regardless of success or failure. Value 'Never' : Do not send email.",
+        "When": "(Mandatory) Specifies when to send an email notification. Possible values: 'OnError' - Send email only when a system error or an action error occurs; 'OnErrorOrAction' - Send email when the script performed actions or when errors occurred; 'Always' - Send email when the script is finished, regardless of success or failure; 'Never' - Do not send email.",
         "From": "(Mandatory) The sender's email address.",
         "To": "(Mandatory To or Bcc) An array of recipient email addresses. The script will send an email to all addresses in the array.",
         "Bcc": "(Mandatory To or Bcc) An array of BCC email addresses.",
@@ -57,7 +57,7 @@
         "Smtp": {
           "ServerName": "(Mandatory) The hostname or IP address of the SMTP server.",
           "Port": "(Mandatory) The port number of the SMTP server. Possible values: 25, 465, 587, 2525",
-          "ConnectionType": "(Optional) The connection type for the SMTP server. Possible values: 'None', 'Auto', 'SslOnConnect', 'StartTls', 'StartTlsWhenAvailable'. Default value: 'None'",
+          "ConnectionType": "(Optional) The connection type for the SMTP server. Possible values: 'None' - No encryption; 'Auto' - Attempt TLS, fall back to unencrypted; 'SslOnConnect' - Use SSL from the beginning; 'StartTls' - Start with unencrypted, then upgrade to TLS; 'StartTlsWhenAvailable' - Start with unencrypted, upgrade to TLS if supported. Default value: 'None'",
           "UserName": "(Optional) The username for authenticating with the SMTP server. Possible values: A string representing the username, or 'ENV:yourVariableName' to read from an environment variable. If undefined or NULL, no authentication is attempted.",
           "Password": "(Optional) The password for authenticating with the SMTP server. Possible values: A string representing the password, or 'ENV:yourVariableName' to read from an environment variable. If undefined or NULL, no authentication is attempted."
         },
@@ -73,7 +73,7 @@
           "OnlyActionErrors": "(Mandatory) Whether to log only actions that failed. Possible values: true or false."
         },
         "Where": {
-          "Folder": "(Mandatory) Value '..\\Logs': Path relative to the script. Value 'C:\\MyApp\\Logs': An absolute path. If not specified or NULL, no log files will be created.",
+          "Folder": "(Mandatory) The path to the folder where log files will be created. Value '..\\Logs': Path relative to the script. Value 'C:\\MyApp\\Logs': An absolute path. If not specified or NULL, no log files will be created.",
           "FileExtensions": "(Mandatory) An array of file extensions for the log files (e.g., ['.xlsx'], ['.txt'], ['.csv']). Multiple values are supported. '.xlsx' requires the 'ImportExcel' PowerShell module. Ignored when Folder is NULL."
         },
         "DeleteLogsAfterDays": "(Optional) The number of days to keep log files. Log files older than this value will be removed. If not specified or 0, logs will be kept indefinitely."

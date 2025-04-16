@@ -1303,7 +1303,10 @@ end {
     }
     finally {
         if ($systemErrors) {
-            Write-Warning "Found $($systemErrors.Count) system errors"
+            $M = 'Found {0} system error{1}' -f
+            $systemErrors.Count,
+            $(if ($systemErrors.Count -ne 1) { 's' })
+            Write-Warning $M
 
             $systemErrors | ForEach-Object {
                 Write-Warning $_.Message

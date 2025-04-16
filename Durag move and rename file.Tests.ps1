@@ -59,7 +59,7 @@ BeforeAll {
 
     $testScript = $PSCommandPath.Replace('.Tests.ps1', '.ps1')
     $testParams = @{
-        ImportFile = $testOutParams.FilePath
+        ConfigurationJsonFile = $testOutParams.FilePath
     }
 
     function Send-MailKitMessageHC {
@@ -99,7 +99,7 @@ BeforeAll {
     Mock Write-EventLog
 }
 Describe 'the mandatory parameters are' {
-    It '<_>' -ForEach @('ImportFile') {
+    It '<_>' -ForEach @('ConfigurationJsonFile') {
         (Get-Command $testScript).Parameters[$_].Attributes.Mandatory |
         Should -BeTrue
     }
@@ -126,12 +126,12 @@ Describe 'create an error log file when' {
 
         Should -Not -Invoke Out-File
     }
-    Context 'the ImportFile' {
+    Context 'the ConfigurationJsonFile' {
         It 'is not found' {
             Mock Out-File
 
             $testNewParams = $testParams.clone()
-            $testNewParams.ImportFile = 'nonExisting.json'
+            $testNewParams.ConfigurationJsonFile = 'nonExisting.json'
 
             .$testScript @testNewParams
 
@@ -158,7 +158,7 @@ Describe 'create an error log file when' {
 
                 Should -Invoke Out-File -Times 1 -Exactly -ParameterFilter {
                     ($LiteralPath -like '* - System errors.txt') -and
-                    ($InputObject -like "*$ImportFile*Property 'Source.$_' not found*")
+                    ($InputObject -like "*$ConfigurationJsonFile*Property 'Source.$_' not found*")
                 }
             }
             It '<_> not found' -ForEach @(
@@ -177,7 +177,7 @@ Describe 'create an error log file when' {
 
                 Should -Invoke Out-File -Times 1 -Exactly -ParameterFilter {
                     ($LiteralPath -like '* - System errors.txt') -and
-                    ($InputObject -like "*$ImportFile*Property 'Destination.$_' not found*")
+                    ($InputObject -like "*$ConfigurationJsonFile*Property 'Destination.$_' not found*")
                 }
             }
             It 'Folder <_> not found' -ForEach @(
@@ -196,7 +196,7 @@ Describe 'create an error log file when' {
 
                 Should -Invoke Out-File -Times 1 -Exactly -ParameterFilter {
                     ($LiteralPath -like '* - System errors.txt') -and
-                    ($InputObject -like "*$ImportFile*$_.Folder 'TestDrive:\nonExisting' not found*")
+                    ($InputObject -like "*$ConfigurationJsonFile*$_.Folder 'TestDrive:\nonExisting' not found*")
                 }
             }
         }

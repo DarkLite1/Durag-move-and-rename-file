@@ -16,7 +16,7 @@
         - source      : 'Source.Folder\Analyse_26032025.xlsx'
         - destination : 'Destination.Folder\2025\AnalysesJour_20250326.xlsx'
 
-    .PARAMETER ImportFile
+    .PARAMETER ConfigurationJsonFile
         A .JSON file that contains all the parameters used by the script.
 
     .PARAMETER Source.Folder
@@ -28,30 +28,14 @@
     .PARAMETER Destination.Folder
         The destination folder.
 
-    .PARAMETER LogFolder
-        The folder where the log files will be saved.
-
-        Example:
-        - Value '..\\Logs'        : Path relative to the script.
-        - Value 'C:\\MyApp\\Logs' : An absolute path.
-        - Value NULL              : Create no log file.
-
-    .PARAMETER LogFileExtension
-        The value is ignored when LogFolder is NULL.
-
-        - Value '.xlsx' : Create an Excel log file.
-        - Value '.txt'  : Create a text log file.
-        - Value '.csv'  : Create a comma separated log file
-
-    .PARAMETER LogToEventLog
-        - Value TRUE : Log verbose to event log.
-        - Value FALSE : Do not log messages to the event log.
+    .PARAMETER Settings
+        Check the Example.json for details.
 #>
 
 [CmdLetBinding()]
 param (
     [Parameter(Mandatory)]
-    [string]$ImportFile
+    [string]$ConfigurationJsonFile
 )
 
 begin {
@@ -73,9 +57,9 @@ begin {
         )
 
         #region Import .json file
-        Write-Verbose "Import .json file '$ImportFile'"
+        Write-Verbose "Import .json file '$ConfigurationJsonFile'"
 
-        $jsonFileItem = Get-Item -LiteralPath $ImportFile -ErrorAction Stop
+        $jsonFileItem = Get-Item -LiteralPath $ConfigurationJsonFile -ErrorAction Stop
 
         $jsonFileContent = Get-Content $jsonFileItem -Raw -Encoding UTF8 |
         ConvertFrom-Json
@@ -122,7 +106,7 @@ begin {
     catch {
         $systemErrors += [PSCustomObject]@{
             DateTime = Get-Date
-            Message  = "Input file '$ImportFile': $_"
+            Message  = "Input file '$ConfigurationJsonFile': $_"
         }
 
         Write-Warning $systemErrors[-1].Message

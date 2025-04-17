@@ -262,6 +262,7 @@ process {
 
 end {
     function Out-LogFileHC {
+        [CmdletBinding()]
         param (
             [Parameter(Mandatory)]
             [PSCustomObject[]]$DataToExport,
@@ -1046,7 +1047,7 @@ end {
                             PartialPath    = "$baseLogName - Errors{0}"
                             FileExtensions = $logFileExtensions
                         }
-                        $allLogFilePaths += Out-LogFileHC @params
+                        $allLogFilePaths += Out-LogFileHC @params -EA Ignore
                     }
                 }
             }
@@ -1104,7 +1105,7 @@ end {
                     PartialPath    = "$baseLogName - Errors{0}"
                     FileExtensions = $logFileExtensions
                 }
-                $allLogFilePaths += Out-LogFileHC @params
+                $allLogFilePaths += Out-LogFileHC @params -EA Ignore
             }
         }
         #endregion
@@ -1384,7 +1385,7 @@ end {
                     PartialPath    = "$baseLogName - Errors{0}"
                     FileExtensions = $logFileExtensions
                 }
-                $null = Out-LogFileHC @params
+                $null = Out-LogFileHC @params -EA Ignore
             }
         }
         #endregion

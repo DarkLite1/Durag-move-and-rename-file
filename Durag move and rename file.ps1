@@ -429,9 +429,9 @@ end {
             .PARAMETER FromDisplayName
                 The display name to show for the sender.
 
-                Email clients may display this differently. It is most likely to be
-                shown if the sender's email address is not recognized (e.g., not in
-                the address book).
+                Email clients may display this differently. It is most likely
+                to be shown if the sender's email address is not recognized
+                (e.g., not in the address book).
 
             .PARAMETER To
                 The recipient's email address.
@@ -1307,6 +1307,10 @@ end {
     </body>
 </html>
 "@
+
+                if ($sendMail.FromDisplayName) {
+                    $mailParams.FromDisplayName = $sendMail.FromDisplayName
+                }
 
                 if ($sendMail.Subject) {
                     $mailParams.Subject = '{0}, {1}' -f

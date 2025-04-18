@@ -1249,7 +1249,7 @@ end {
     <body>
         <table>
             <h1>$scriptName</h1>
-            <hr style="border: 0; border-top: 1px solid #cccccc; margin-top: 5px;">
+            <hr size="2" color="#06cc7a">
 
             $($sendMail.Body)
 
@@ -1286,8 +1286,7 @@ end {
                 }
             )
 
-            <h3>About</h3>
-            <hr style="border: 0; border-top: 1px solid #cccccc; margin-top: 5px;">
+            <hr size="2" color="#06cc7a">
             <table id="aboutTable">
                 $(
                     if ($scriptStartTime) {

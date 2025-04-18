@@ -36,7 +36,7 @@
       },
       "Where": {
         "Folder": "..\\Logs",
-        "FileExtensions": [".xlsx", ".txt", ".csv"]
+        "FileExtensions": [".xlsx", ".json", ".csv"]
       },
       "DeleteLogsAfterDays": 30
     },
@@ -77,7 +77,7 @@
         },
         "Where": {
           "Folder": "(Mandatory) The path to the folder where log files will be created. Value '..\\Logs': Path relative to the script. Value 'C:\\MyApp\\Logs': An absolute path. If not specified or NULL, no log files will be created. Supports environment variables (e.g., 'ENV:LOG_FOLDER').",
-          "FileExtensions": "(Mandatory) An array of file extensions for the log files (e.g., ['.xlsx'], ['.txt'], ['.csv']). Multiple values are supported. '.xlsx' requires the 'ImportExcel' PowerShell module. Ignored when Folder is NULL."
+          "FileExtensions": "(Mandatory) An array of file extensions for the log files (e.g., ['.xlsx'], ['.json'], ['.csv']). Multiple values are supported. '.xlsx' requires the 'ImportExcel' PowerShell module. Ignored when Folder is NULL."
         },
         "DeleteLogsAfterDays": "(Optional) The number of days to keep log files. Log files older than this value (based on their last write time) will be removed from the log folder specified in 'SaveLogFiles.Where.Folder'. If not specified or 0, logs will be kept indefinitely. CAUTION: Ensure the 'SaveLogFiles.Where.Folder' is specifically designated for log files to avoid unintended deletion of other files."
       },

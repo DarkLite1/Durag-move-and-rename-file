@@ -42,7 +42,7 @@ BeforeAll {
                 }
                 Where               = @{
                     Folder         = (New-Item 'TestDrive:/log' -ItemType Directory).FullName
-                    FileExtensions = @('.txt', '.csv')
+                    FileExtensions = @('.json', '.csv')
                 }
                 deleteLogsAfterDays = 1
             }
@@ -157,8 +157,8 @@ Describe 'create an error log file when' {
                 $LASTEXITCODE | Should -Be 1
 
                 Should -Invoke Out-File -Times 1 -Exactly -ParameterFilter {
-                    ($LiteralPath -like '* - System errors.txt') -and
-                    ($InputObject -like "*$ConfigurationJsonFile*Property 'Source.$_' not found*")
+                    ($LiteralPath -like '* - System errors.json') -and
+                    ($InputObject -like "*Property 'Source.$_' not found*")
                 }
             }
             It '<_> not found' -ForEach @(
@@ -176,8 +176,8 @@ Describe 'create an error log file when' {
                 .$testScript @testParams
 
                 Should -Invoke Out-File -Times 1 -Exactly -ParameterFilter {
-                    ($LiteralPath -like '* - System errors.txt') -and
-                    ($InputObject -like "*$ConfigurationJsonFile*Property 'Destination.$_' not found*")
+                    ($LiteralPath -like '* - System errors.json') -and
+                    ($InputObject -like "*Property 'Destination.$_' not found*")
                 }
             }
             It 'Folder <_> not found' -ForEach @(
@@ -195,8 +195,8 @@ Describe 'create an error log file when' {
                 .$testScript @testParams
 
                 Should -Invoke Out-File -Times 1 -Exactly -ParameterFilter {
-                    ($LiteralPath -like '* - System errors.txt') -and
-                    ($InputObject -like "*$ConfigurationJsonFile*$_.Folder 'TestDrive:\nonExisting' not found*")
+                    ($LiteralPath -like '* - System errors.json') -and
+                    ($InputObject -like "*$_.Folder 'TestDrive:\\nonExisting' not found*")
                 }
             }
         }
@@ -281,16 +281,18 @@ Describe 'when a file fails to move' {
         $testLogFiles = Get-ChildItem -Path $testInputFile.Settings.SaveLogFiles.Where.Folder -Recurse -File
     }
     It 'error log files are created for each extension' {
-        $testLogFiles | Where-Object { $_.Name -like '* - Action errors.txt' } |
+        $testLogFiles | Where-Object { $_.Name -like '* - Action errors.json' } |
         Should -Not -BeNullOrEmpty
 
         $testLogFiles | Where-Object { $_.Name -like '* - Action errors.csv' } |
         Should -Not -BeNullOrEmpty
     }
     It 'Log file content is correct' {
-        $testLogFiles | Where-Object { $_.Name -like '* - Action errors.txt' } |
+        $testLogFiles | Where-Object {
+            $_.Name -like '* - Action errors.json'
+        } |
         Get-Content -Raw |
-        Should -BeLike  "*Failed to move file '$($testFile.FullName)'*Oops*"
+        Should -BeLike  "*Failed to move file '$($testFile.FullName.replace('\', '\\'))'*Oops*"
     }
     It 'an email is sent when SendMail.When is Always' {
         Should -Invoke Send-MailKitMessageHC -Times 1 -Exactly -Scope Describe -ParameterFilter {
@@ -301,5 +303,5 @@ Describe 'when a file fails to move' {
             ($Attachments -contains $testLogFiles[0].FullName) -and
             ($Attachments -contains $testLogFiles[1].FullName)
         }
-    } -Tag test
+    }
 }

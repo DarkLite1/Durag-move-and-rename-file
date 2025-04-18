@@ -1372,14 +1372,14 @@ end {
                 }
 
                 #region Create SMTP credential
-                $smtpPassword = Get-StringValueHC $sendMail.Smtp.UserName
                 $smtpUserName = Get-StringValueHC $sendMail.Smtp.Password
+                $smtpPassword = Get-StringValueHC $sendMail.Smtp.UserName
 
-                if ($smtpPassword -and $smtpUserName) {
+                if ( $smtpUserName -and $smtpPassword) {
                     try {
-                        $securePassword = ConvertTo-SecureString -String $sendMail.Smtp.Password -AsPlainText -Force
+                        $securePassword = ConvertTo-SecureString -String $smtpPassword -AsPlainText -Force
 
-                        $credential = New-Object System.Management.Automation.PSCredential($sendMail.Smtp.UserName, $securePassword)
+                        $credential = New-Object System.Management.Automation.PSCredential($smtpUserName, $securePassword)
 
                         $mailParams.Credential = $credential
                     }
@@ -1387,7 +1387,7 @@ end {
                         throw "Failed to create credential: $_"
                     }
                 }
-                elseif ($smtpPassword -or $smtpUserName) {
+                elseif ($smtpUserName -or $smtpPassword) {
                     throw "Both 'Settings.SendMail.Smtp.Username' and 'Settings.SendMail.Smtp.Password' are required when authentication is needed."
                 }
                 #endregion

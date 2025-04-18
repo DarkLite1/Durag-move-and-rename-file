@@ -286,6 +286,17 @@ end {
             Write-Verbose $M
 
             switch ($fileExtension) {
+                '.csv' {
+                    $params = @{
+                        LiteralPath       = $logFilePath
+                        Delimiter         = ';'
+                        NoTypeInformation = $true
+                    }
+                    $DataToExport | Export-Csv @params
+
+                    $allLogFilePaths += $logFilePath
+                    break
+                }
                 '.json' {
                     #region Convert error object to error message string
                     $convertedDataToExport = foreach (
@@ -319,13 +330,10 @@ end {
                     $allLogFilePaths += $logFilePath
                     break
                 }
-                '.csv' {
-                    $params = @{
-                        LiteralPath       = $logFilePath
-                        Delimiter         = ';'
-                        NoTypeInformation = $true
-                    }
-                    $DataToExport | Export-Csv @params
+                '.txt' {
+                    $DataToExport |
+                    Format-List -Property * -Force |
+                    Out-File -LiteralPath $logFilePath
 
                     $allLogFilePaths += $logFilePath
                     break

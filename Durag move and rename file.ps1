@@ -1379,8 +1379,8 @@ end {
                 }
 
                 #region Create SMTP credential
-                $smtpUserName = Get-StringValueHC $sendMail.Smtp.Password
-                $smtpPassword = Get-StringValueHC $sendMail.Smtp.UserName
+                $smtpUserName = Get-StringValueHC $sendMail.Smtp.UserName
+                $smtpPassword = Get-StringValueHC $sendMail.Smtp.Password
 
                 if ( $smtpUserName -and $smtpPassword) {
                     try {

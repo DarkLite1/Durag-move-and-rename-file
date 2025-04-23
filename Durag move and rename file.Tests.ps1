@@ -157,7 +157,7 @@ Describe 'create an error log file when' {
                 $LASTEXITCODE | Should -Be 1
 
                 Should -Invoke Out-File -Times 1 -Exactly -ParameterFilter {
-                    ($LiteralPath -like '* - System errors.json') -and
+                    ($LiteralPath -like '* - Errors.json') -and
                     ($InputObject -like "*Property 'Source.$_' not found*")
                 }
             }
@@ -176,7 +176,7 @@ Describe 'create an error log file when' {
                 .$testScript @testParams
 
                 Should -Invoke Out-File -Times 1 -Exactly -ParameterFilter {
-                    ($LiteralPath -like '* - System errors.json') -and
+                    ($LiteralPath -like '* - Errors.json') -and
                     ($InputObject -like "*Property 'Destination.$_' not found*")
                 }
             }
@@ -195,7 +195,7 @@ Describe 'create an error log file when' {
                 .$testScript @testParams
 
                 Should -Invoke Out-File -Times 1 -Exactly -ParameterFilter {
-                    ($LiteralPath -like '* - System errors.json') -and
+                    ($LiteralPath -like '* - Errors.json') -and
                     ($InputObject -like "*$_.Folder 'TestDrive:\\nonExisting' not found*")
                 }
             }

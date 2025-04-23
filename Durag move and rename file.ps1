@@ -1037,7 +1037,7 @@ end {
                 if ($systemErrors -and $isLog.SystemErrors) {
                     $params = @{
                         DataToExport   = $systemErrors
-                        PartialPath    = "$baseLogName - System errors"
+                        PartialPath    = "$baseLogName - Errors"
                         FileExtensions = $logFileExtensions
                     }
                     $allLogFilePaths += Out-LogFileHC @params
@@ -1080,7 +1080,7 @@ end {
                     if ($baseLogName -and $isLog.systemErrors) {
                         $params = @{
                             DataToExport   = $systemErrors[-1]
-                            PartialPath    = "$baseLogName - System errors"
+                            PartialPath    = "$baseLogName - Errors"
                             FileExtensions = $logFileExtensions
                         }
                         $allLogFilePaths += Out-LogFileHC @params -EA Ignore

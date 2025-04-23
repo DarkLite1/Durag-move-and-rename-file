@@ -141,6 +141,8 @@ process {
             }
         )
 
+        Write-Verbose $eventLogData[-1].Message
+
         if (!$filesToProcess) {
             Write-Verbose 'No files found, exit script'
             exit

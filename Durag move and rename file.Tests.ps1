@@ -62,6 +62,34 @@ BeforeAll {
         ConfigurationJsonFile = $testOutParams.FilePath
     }
 
+    Function Copy-ObjectHC {
+        <#
+        .SYNOPSIS
+            Make a deep copy of an object using JSON serialization.
+
+        .DESCRIPTION
+            Uses ConvertTo-Json and ConvertFrom-Json to create an independent
+            copy of an object. This method is generally effective for objects
+            that can be represented in JSON format.
+
+        .PARAMETER InputObject
+            The object to copy.
+
+        .EXAMPLE
+            $newArray = Copy-ObjectHC -InputObject $originalArray
+        #>
+        [CmdletBinding()]
+        Param (
+            [Parameter(Mandatory)]
+            [Object]$InputObject
+        )
+
+        $jsonString = $InputObject | ConvertTo-Json -Depth 100
+
+        $deepCopy = $jsonString | ConvertFrom-Json
+
+        return $deepCopy
+    }
     function Send-MailKitMessageHC {
         param (
             [parameter(Mandatory)]
@@ -186,7 +214,7 @@ Describe 'create an error log file when' {
                 Mock Out-File
 
                 $testNewInputFile = Copy-ObjectHC $testInputFile
-                $testNewInputFile[$_]['Folder'] = 'TestDrive:\nonExisting'
+                $testNewInputFile.$_.Folder = 'TestDrive:\nonExisting'
 
                 & $realCmdLet.OutFile @testOutParams -InputObject (
                     $testNewInputFile | ConvertTo-Json -Depth 7

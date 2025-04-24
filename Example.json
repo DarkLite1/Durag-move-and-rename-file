@@ -47,7 +47,7 @@
   },
   "?": {
     "Settings": {
-      "ScriptName": "(Mandatory) Name of the script, used in the log files and in the event logs",
+      "ScriptName": "(Mandatory) Name of the script, used in the log files and in the event logs.",
       "SendMail": {
         "When": "(Mandatory) Specifies when to send an email notification. Possible values: 'OnError' - Send email only when a system error or an action error occurs; 'OnErrorOrAction' - Send email when the script performed actions or when errors occurred; 'Always' - Send email when the script is finished, regardless of success or failure; 'Never' - Do not send email.",
         "From": "(Mandatory) The sender's email address. Supports environment variables (e.g., 'ENV:MAIL_FROM_ADDRESS').",

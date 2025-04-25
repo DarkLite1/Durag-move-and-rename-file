@@ -50,6 +50,7 @@ begin {
         $eventLogData.Add(
             [PSCustomObject]@{
                 Message   = 'Script started'
+                DateTime  = $scriptStartTime
                 EntryType = 'Information'
                 EventID   = '100'
             }

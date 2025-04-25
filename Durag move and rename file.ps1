@@ -49,7 +49,6 @@ begin {
     try {
         $eventLogData.Add(
             [PSCustomObject]@{
-                DateTime  = $scriptStartTime
                 Message   = 'Script started'
                 EntryType = 'Information'
                 EventID   = '100'
@@ -133,7 +132,6 @@ process {
 
         $eventLogData.Add(
             [PSCustomObject]@{
-                DateTime  = $scriptStartTime
                 Message   = ("Found {0} file{1} in source folder '$SourceFolder'" -f $filesToProcess.Count,
                     $(if ($filesToProcess.Count -ne 1) { 's' }))
                 EntryType = 'Information'
@@ -240,7 +238,6 @@ process {
 
         $eventLogData.Add(
             [PSCustomObject]@{
-                DateTime  = $scriptStartTime
                 Message   = ("Processed {0} file{1} in source folder '$SourceFolder'" -f
                     $logFileData.Count,
                     $(if ($logFileData.Count -ne 1) { 's' }))
@@ -863,17 +860,25 @@ end {
             an array of PSCustomObject with properties: Message, EntryType, and
             EventID.
 
-        .PARAMETER Events.Message
-            The message to be logged. This can be a string or a hashtable with
-            different properties. If a hashtable is provided, the message will be
-            formatted.
+        .PARAMETER Events.xxx
+            All properties that are not 'EntryType' or 'EventID' will be used to
+            create a formatted message.
 
         .PARAMETER Events.EntryType
-            The type of the event. This can be one of the following: Information,
-            Warning, Error, SuccessAudit, FailureAudit.
+            The type of the event.
+
+            The following values are supported:
+            - Information
+            - Warning
+            - Error
+            - SuccessAudit
+            - FailureAudit
+
+            The default value is Information.
 
         .PARAMETER Events.EventID
             The ID of the event. This should be a number.
+            The default value is 4.
 
         .EXAMPLE
             $eventLogData = [System.Collections.Generic.List[PSObject]]::new()
@@ -887,23 +892,19 @@ end {
             )
             $eventLogData.Add(
                 [PSCustomObject]@{
-                    Message   = @{
-                        Message  = 'Failed to read the file'
-                        FileName = 'C:\Temp\test.txt'
-                        DateTime = Get-Date
-                    }
+                    Message  = 'Failed to read the file'
+                    FileName = 'C:\Temp\test.txt'
+                    DateTime = Get-Date
                     EntryType = 'Error'
                     EventID   = '2'
                 }
             )
             $eventLogData.Add(
                 [PSCustomObject]@{
-                    Message   = @{
-                        Message  = 'Created file'
-                        FileName = 'C:\Report.xlsx'
-                        FileSize = 123456
-                        DateTime = Get-Date
-                    }
+                    Message  = 'Created file'
+                    FileName = 'C:\Report.xlsx'
+                    FileSize = 123456
+                    DateTime = Get-Date
                     EntryType = 'Information'
                     EventID   = '1'
                 }
@@ -954,16 +955,20 @@ end {
                     ErrorAction = 'Stop'
                 }
 
-                if ($eventItem.Message -is [System.Collections.Hashtable]) {
-                    foreach ($item in $eventItem.Message.GetEnumerator()) {
-                        $params.Message += "`n- {0} '{1}'" -f $item.key, $item.value
+                if (-not $params.EntryType) {
+                    $params.EntryType = 'Information'
+                }
+                if (-not $params.EventID) {
+                    $params.EventID = 4
+                }
+
+                foreach (
+                    $property in
+                    $eventItem.PSObject.Properties | Where-Object {
+                        ($_.Name -ne 'EntryType') -and ($_.Name -ne 'EventID')
                     }
-                }
-                elseif ($eventItem.Message -is [System.String]) {
-                    $params.Message = $eventItem.Message
-                }
-                else {
-                    throw "Type '$($eventItem.Message.GetType().FullName)' not supported for 'Message' property"
+                ) {
+                    $params.Message += "`n- $($property.Name) '$($property.Value)'"
                 }
 
                 Write-Verbose "Write event to log '$LogName' source '$Source' message '$($params.Message)'"
@@ -1171,7 +1176,7 @@ end {
                     $eventLogData.Add(
                         [PSCustomObject]@{
                             DateTime  = $_.DateTime
-                            Message   = $_.Message
+                            Error     = $_.Message
                             EntryType = 'Error'
                             EventID   = '2'
                         }
@@ -1180,7 +1185,6 @@ end {
 
                 $eventLogData.Add(
                     [PSCustomObject]@{
-                        DateTime  = Get-Date
                         Message   = 'Script ended'
                         EntryType = 'Information'
                         EventID   = '199'

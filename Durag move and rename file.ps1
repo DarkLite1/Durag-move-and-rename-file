@@ -860,8 +860,68 @@ end {
 
         .PARAMETER Events
             Specifies the events to be written to the event log. This should be
-            an array of PSCustomObject with properties: DateTime, Message,
-            EntryType, and EventID.
+            an array of PSCustomObject with properties: Message, EntryType, and
+            EventID.
+
+        .PARAMETER Events.Message
+            The message to be logged. This can be a string or a hashtable with
+            different properties. If a hashtable is provided, the message will be
+            formatted.
+
+        .PARAMETER Events.EntryType
+            The type of the event. This can be one of the following: Information,
+            Warning, Error, SuccessAudit, FailureAudit.
+
+        .PARAMETER Events.EventID
+            The ID of the event. This should be a number.
+
+        .EXAMPLE
+            $eventLogData = [System.Collections.Generic.List[PSObject]]::new()
+
+            $eventLogData.Add(
+                [PSCustomObject]@{
+                    Message   = 'Script started'
+                    EntryType = 'Information'
+                    EventID   = '100'
+                }
+            )
+            $eventLogData.Add(
+                [PSCustomObject]@{
+                    Message   = @{
+                        Message  = 'Failed to read the file'
+                        FileName = 'C:\Temp\test.txt'
+                        DateTime = Get-Date
+                    }
+                    EntryType = 'Error'
+                    EventID   = '2'
+                }
+            )
+            $eventLogData.Add(
+                [PSCustomObject]@{
+                    Message   = @{
+                        Message  = 'Created file'
+                        FileName = 'C:\Report.xlsx'
+                        FileSize = 123456
+                        DateTime = Get-Date
+                    }
+                    EntryType = 'Information'
+                    EventID   = '1'
+                }
+            )
+            $eventLogData.Add(
+                [PSCustomObject]@{
+                    Message   = 'Script finished'
+                    EntryType = 'Information'
+                    EventID   = '199'
+                }
+            )
+
+            $params = @{
+                Source  = 'Test (Brecht)'
+                LogName = 'HCScripts'
+                Events  = $eventLogData
+            }
+            Write-EventsToEventLogHC @params
         #>
 
         [CmdLetBinding()]
@@ -890,8 +950,20 @@ end {
                     Source      = $Source
                     EntryType   = $eventItem.EntryType
                     EventID     = $eventItem.EventID
-                    Message     = '{0}: {1}' -f $eventItem.DateTime, $eventItem.Message
+                    Message     = ''
                     ErrorAction = 'Stop'
+                }
+
+                if ($eventItem.Message -is [System.Collections.Hashtable]) {
+                    foreach ($item in $eventItem.Message.GetEnumerator()) {
+                        $params.Message += "`n- {0} '{1}'" -f $item.key, $item.value
+                    }
+                }
+                elseif ($eventItem.Message -is [System.String]) {
+                    $params.Message = $eventItem.Message
+                }
+                else {
+                    throw "Type '$($eventItem.Message.GetType().FullName)' not supported for 'Message' property"
                 }
 
                 Write-Verbose "Write event to log '$LogName' source '$Source' message '$($params.Message)'"

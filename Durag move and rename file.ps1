@@ -17,19 +17,10 @@
         - destination : 'Destination.Folder\2025\AnalysesJour_20250326.xlsx'
 
     .PARAMETER ConfigurationJsonFile
-        A .JSON file that contains all the parameters used by the script.
+        Contains all the parameters used by the script.
 
-    .PARAMETER Source.Folder
-        The source folder.
-
-    .PARAMETER Source.MatchFileNameRegex
-        Only files that match the regex will be copied.
-
-    .PARAMETER Destination.Folder
-        The destination folder.
-
-    .PARAMETER Settings
-        Check the Example.json for details.
+    .NOTES
+        See 'Example.json' for a detailed explanation of parameters.
 #>
 
 [CmdLetBinding()]

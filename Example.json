@@ -46,6 +46,13 @@
     }
   },
   "?": {
+    "Source": {
+      "Folder": "(Mandatory) The path to the source folder.",
+      "MatchFileNameRegex": "(Mandatory) A regular expression to match file names. Possible values: '.*' - Process all files; '\\.xlsx$' - Process only Excel files; 'Report_[0-9]{8}\\.xlsx$' - Process only files with names starting with 'Report_' and ending with '.xlsx' followed by 8 digits; ..."
+    },
+    "Destination": {
+      "Folder": "(Mandatory) The path to the destination folder."
+    },
     "Settings": {
       "ScriptName": "(Mandatory) Name of the script, used in the log files and in the event logs.",
       "SendMail": {

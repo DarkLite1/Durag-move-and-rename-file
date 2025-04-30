@@ -36,6 +36,21 @@ begin {
     $scriptStartTime = Get-Date
 
     try {
+        function Test-IsValidRegexHC {
+            param(
+                [Parameter(Mandatory)]
+                [string]$Regex
+            )
+            try {
+                $null = [regex]::IsMatch('', $Regex)
+
+                return $true
+            }
+            catch {
+                return $false
+            }
+        }
+
         $eventLogData.Add(
             [PSCustomObject]@{
                 Message   = 'Script started'
@@ -75,6 +90,14 @@ begin {
             { throw "Property 'Destination.$_' not found" }
         )
         #endregion
+
+         #region Test MatchFileNameRegex
+         if (-not
+         (Test-IsValidRegexHC $jsonFileContent.Source.MatchFileNameRegex)
+     ) {
+         throw "Property 'Source.MatchFileNameRegex' with value '$($jsonFileContent.Source.MatchFileNameRegex)' is not a valid regex pattern."
+     }
+     #endregion
 
         #region Test folders exist
         @{

@@ -282,7 +282,11 @@ end {
             [String]$PartialPath,
             [Parameter(Mandatory)]
             [String[]]$FileExtensions,
-            [scriptblock]$ExcelCellStyle,
+            [hashtable]$ExcelFile = @{
+                SheetName = 'Overview'
+                TableName = 'Overview'
+                CellStyle = $null
+            },
             [Switch]$Append
         )
     
@@ -383,12 +387,12 @@ end {
                             AutoNameRange = $true
                             AutoSize      = $true
                             FreezeTopRow  = $true
-                            WorksheetName = 'Overview'
-                            TableName     = 'Overview'
+                            WorksheetName = $ExcelFile.SheetName
+                            TableName     = $ExcelFile.TableName
                             Verbose       = $false
                         }
-                        if ($ExcelCellStyle) {
-                            $excelParams.CellStyleSB = $ExcelCellStyle
+                        if ($ExcelFile.CellStyle) {
+                            $excelParams.CellStyleSB = $ExcelFile.CellStyle
                         }
                         $DataToExport | Export-Excel @excelParams
     

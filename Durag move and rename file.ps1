@@ -285,21 +285,21 @@ end {
             [scriptblock]$ExcelCellStyle,
             [Switch]$Append
         )
-
+    
         $allLogFilePaths = @()
-
+    
         foreach (
             $fileExtension in
             $FileExtensions | Sort-Object -Unique
         ) {
             try {
                 $logFilePath = "$PartialPath{0}" -f $fileExtension
-
+    
                 $M = "Export {0} object{1} to '$logFilePath'" -f
                 $DataToExport.Count,
                 $(if ($DataToExport.Count -ne 1) { 's' })
                 Write-Verbose $M
-
+    
                 switch ($fileExtension) {
                     '.csv' {
                         $params = @{
@@ -309,7 +309,7 @@ end {
                             NoTypeInformation = $true
                         }
                         $DataToExport | Export-Csv @params
-
+    
                         break
                     }
                     '.json' {
@@ -337,46 +337,46 @@ end {
                             $exportObject
                         }
                         #endregion
-
+    
                         if (
-                            $Append -and
+                            $Append -and 
                             (Test-Path -LiteralPath $logFilePath -PathType Leaf)
                         ) {
                             $params = @{
-                                LiteralPath = $logFilePath
+                                LiteralPath = $logFilePath 
                                 Raw         = $true
                                 Encoding    = 'UTF8'
                             }
                             $jsonFileContent = Get-Content @params | ConvertFrom-Json
-
+    
                             $convertedDataToExport = [array]$convertedDataToExport + [array]$jsonFileContent
                         }
-
+    
                         $convertedDataToExport |
                         ConvertTo-Json -Depth 7 |
                         Out-File -LiteralPath $logFilePath
-
+    
                         break
                     }
                     '.txt' {
                         $params = @{
-                            LiteralPath = $logFilePath
+                            LiteralPath = $logFilePath 
                             Append      = $Append
                         }
-
+    
                         $DataToExport | Format-List -Property * -Force |
                         Out-File @params
-
+    
                         break
                     }
                     '.xlsx' {
                         if (
-                            (-not $Append) -and
+                            (-not $Append) -and 
                             (Test-Path -LiteralPath $logFilePath -PathType Leaf)
                         ) {
                             $logFilePath | Remove-Item
                         }
-
+    
                         $excelParams = @{
                             Path          = $logFilePath
                             Append        = $true
@@ -391,21 +391,21 @@ end {
                             $excelParams.CellStyleSB = $ExcelCellStyle
                         }
                         $DataToExport | Export-Excel @excelParams
-
+    
                         break
                     }
                     default {
-                        throw "Log file extension '$_' not supported. Supported values are '.xlsx', '.txt' or '.csv'."
+                        throw "Log file extension '$_' not supported. Supported values are '.csv', '.json', '.txt' or '.xlsx'."
                     }
                 }
-
+    
                 $allLogFilePaths += $logFilePath
             }
             catch {
                 Write-Warning "Failed creating log file '$logFilePath': $_"
             }
         }
-
+    
         $allLogFilePaths
     }
 

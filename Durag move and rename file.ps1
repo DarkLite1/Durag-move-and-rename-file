@@ -282,6 +282,7 @@ end {
             [String]$PartialPath,
             [Parameter(Mandatory)]
             [String[]]$FileExtensions,
+            [scriptblock]$ExcelCellStyle,
             [Switch]$Append
         )
 
@@ -385,6 +386,9 @@ end {
                             WorksheetName = 'Overview'
                             TableName     = 'Overview'
                             Verbose       = $false
+                        }
+                        if ($ExcelCellStyle) {
+                            $excelParams.CellStyleSB = $ExcelCellStyle
                         }
                         $DataToExport | Export-Excel @excelParams
 

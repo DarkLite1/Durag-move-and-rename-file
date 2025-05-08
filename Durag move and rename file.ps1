@@ -1473,7 +1473,7 @@ end {
 "@
 
                 if ($sendMail.FromDisplayName) {
-                    $mailParams.FromDisplayName = $sendMail.FromDisplayName
+                    $mailParams.FromDisplayName = Get-StringValueHC $sendMail.FromDisplayName
                 }
 
                 if ($sendMail.Subject) {

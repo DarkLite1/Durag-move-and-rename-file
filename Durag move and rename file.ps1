@@ -289,21 +289,21 @@ end {
             },
             [Switch]$Append
         )
-    
+
         $allLogFilePaths = @()
-    
+
         foreach (
             $fileExtension in
             $FileExtensions | Sort-Object -Unique
         ) {
             try {
                 $logFilePath = "$PartialPath{0}" -f $fileExtension
-    
+
                 $M = "Export {0} object{1} to '$logFilePath'" -f
                 $DataToExport.Count,
                 $(if ($DataToExport.Count -ne 1) { 's' })
                 Write-Verbose $M
-    
+
                 switch ($fileExtension) {
                     '.csv' {
                         $params = @{
@@ -313,7 +313,7 @@ end {
                             NoTypeInformation = $true
                         }
                         $DataToExport | Export-Csv @params
-    
+
                         break
                     }
                     '.json' {
@@ -341,46 +341,46 @@ end {
                             $exportObject
                         }
                         #endregion
-    
+
                         if (
-                            $Append -and 
+                            $Append -and
                             (Test-Path -LiteralPath $logFilePath -PathType Leaf)
                         ) {
                             $params = @{
-                                LiteralPath = $logFilePath 
+                                LiteralPath = $logFilePath
                                 Raw         = $true
                                 Encoding    = 'UTF8'
                             }
                             $jsonFileContent = Get-Content @params | ConvertFrom-Json
-    
+
                             $convertedDataToExport = [array]$convertedDataToExport + [array]$jsonFileContent
                         }
-    
+
                         $convertedDataToExport |
                         ConvertTo-Json -Depth 7 |
                         Out-File -LiteralPath $logFilePath
-    
+
                         break
                     }
                     '.txt' {
                         $params = @{
-                            LiteralPath = $logFilePath 
+                            LiteralPath = $logFilePath
                             Append      = $Append
                         }
-    
+
                         $DataToExport | Format-List -Property * -Force |
                         Out-File @params
-    
+
                         break
                     }
                     '.xlsx' {
                         if (
-                            (-not $Append) -and 
+                            (-not $Append) -and
                             (Test-Path -LiteralPath $logFilePath -PathType Leaf)
                         ) {
                             $logFilePath | Remove-Item
                         }
-    
+
                         $excelParams = @{
                             Path          = $logFilePath
                             Append        = $true
@@ -395,21 +395,21 @@ end {
                             $excelParams.CellStyleSB = $ExcelFile.CellStyle
                         }
                         $DataToExport | Export-Excel @excelParams
-    
+
                         break
                     }
                     default {
                         throw "Log file extension '$_' not supported. Supported values are '.csv', '.json', '.txt' or '.xlsx'."
                     }
                 }
-    
+
                 $allLogFilePaths += $logFilePath
             }
             catch {
                 Write-Warning "Failed creating log file '$logFilePath': $_"
             }
         }
-    
+
         $allLogFilePaths
     }
 
@@ -513,75 +513,75 @@ end {
                 The sender's email address.
 
             .PARAMETER FromDisplayName
-                The display name to show for the sender.
+            The display name to show for the sender.
 
-                Email clients may display this differently. It is most likely
-                to be shown if the sender's email address is not recognized
+            Email clients may display this differently. It is most likely
+            to be shown if the sender's email address is not recognized
                 (e.g., not in the address book).
 
             .PARAMETER To
                 The recipient's email address.
 
             .PARAMETER Body
-                The body of the email, HTML is supported.
+            The body of the email, HTML is supported.
 
             .PARAMETER Subject
-                The subject of the email.
+            The subject of the email.
 
             .PARAMETER Attachments
-                An array of file paths to attach to the email.
+            An array of file paths to attach to the email.
 
             .PARAMETER Priority
-                The email priority.
+            The email priority.
 
-                Valid values are:
-                - 'Low'
-                - 'Normal'
-                - 'High'
-
-            .EXAMPLE
-                # Send an email with StartTls and credential
-
-                $SmtpUserName = 'smtpUser'
-                $SmtpPassword = 'smtpPassword'
-
-                $securePassword = ConvertTo-SecureString -String $SmtpPassword -AsPlainText -Force
-                $credential = New-Object System.Management.Automation.PSCredential($SmtpUserName, $securePassword)
-
-                $params = @{
-                    SmtpServerName      = 'SMT_SERVER@example.com'
-                    SmtpPort            = 587
-                    SmtpConnectionType  = 'StartTls'
-                    Credential          = $credential
-                    From                = 'm@example.com'
-                    To                  = '007@example.com'
-                    Body                = '<p>Mission details in attachment</p>'
-                    Subject             = 'For your eyes only'
-                    Priority            = 'High'
-                    Attachments         = @('c:\Mission.ppt', 'c:\ID.pdf')
-                    MailKitAssemblyPath = 'C:\Program Files\PackageManagement\NuGet\Packages\MailKit.4.11.0\lib\net8.0\MailKit.dll'
-                    MimeKitAssemblyPath = 'C:\Program Files\PackageManagement\NuGet\Packages\MimeKit.4.11.0\lib\net8.0\MimeKit.dll'
-                }
-
-                Send-MailKitMessageHC @params
+            Valid values are:
+            - 'Low'
+            - 'Normal'
+            - 'High'
 
             .EXAMPLE
-                # Send an email without authentication
+            # Send an email with StartTls and credential
 
-                $params = @{
-                    SmtpServerName      = 'SMT_SERVER@example.com'
-                    SmtpPort            = 25
-                    From                = 'hacker@example.com'
-                    FromDisplayName     = 'White hat hacker'
-                    Bcc                 = @('james@example.com', 'mike@example.com')
-                    Body                = '<h1>You have been hacked</h1>'
-                    Subject             = 'Oops'
-                    MailKitAssemblyPath = 'C:\Program Files\PackageManagement\NuGet\Packages\MailKit.4.11.0\lib\net8.0\MailKit.dll'
-                    MimeKitAssemblyPath = 'C:\Program Files\PackageManagement\NuGet\Packages\MimeKit.4.11.0\lib\net8.0\MimeKit.dll'
-                }
+            $SmtpUserName = 'smtpUser'
+            $SmtpPassword = 'smtpPassword'
 
-                Send-MailKitMessageHC @params
-        #>
+            $securePassword = ConvertTo-SecureString -String $SmtpPassword -AsPlainText -Force
+            $credential = New-Object System.Management.Automation.PSCredential($SmtpUserName, $securePassword)
+
+            $params = @{
+                SmtpServerName = 'SMT_SERVER@example.com'
+                SmtpPort = 587
+                SmtpConnectionType = 'StartTls'
+                Credential = $credential
+                from = 'm@example.com'
+                To = '007@example.com'
+                Body = '<p>Mission details in attachment</p>'
+                Subject = 'For your eyes only'
+                Priority = 'High'
+                Attachments = @('c:\Mission.ppt', 'c:\ID.pdf')
+                MailKitAssemblyPath = 'C:\Program Files\PackageManagement\NuGet\Packages\MailKit.4.11.0\lib\net8.0\MailKit.dll'
+                MimeKitAssemblyPath = 'C:\Program Files\PackageManagement\NuGet\Packages\MimeKit.4.11.0\lib\net8.0\MimeKit.dll'
+            }
+
+            Send-MailKitMessageHC @params
+
+            .EXAMPLE
+            # Send an email without authentication
+
+            $params = @{
+                SmtpServerName      = 'SMT_SERVER@example.com'
+                SmtpPort            = 25
+                From                = 'hacker@example.com'
+                FromDisplayName     = 'White hat hacker'
+                Bcc                 = @('james@example.com', 'mike@example.com')
+                Body                = '<h1>You have been hacked</h1>'
+                Subject             = 'Oops'
+                MailKitAssemblyPath = 'C:\Program Files\PackageManagement\NuGet\Packages\MailKit.4.11.0\lib\net8.0\MailKit.dll'
+                MimeKitAssemblyPath = 'C:\Program Files\PackageManagement\NuGet\Packages\MimeKit.4.11.0\lib\net8.0\MimeKit.dll'
+            }
+
+            Send-MailKitMessageHC @params
+            #>
 
         [CmdletBinding()]
         param (
@@ -636,9 +636,6 @@ end {
 
                 $attachmentList = New-Object System.Collections.ArrayList($null)
 
-                $tempFolder = "$env:TEMP\Send-MailKitMessageHC {0}" -f (Get-Random)
-                $totalSizeAttachments = 0
-
                 foreach (
                     $attachmentPath in
                     $Attachments | Sort-Object -Unique
@@ -661,27 +658,7 @@ end {
 
                         $totalSizeAttachments += $attachmentItem.Length
 
-                        if ($attachmentItem.Extension -eq '.xlsx') {
-                            #region Copy Excel file, open file cannot be sent
-                            if (-not(Test-Path $tempFolder)) {
-                                $null = New-Item $tempFolder -ItemType 'Directory'
-                            }
-
-                            $params = @{
-                                LiteralPath = $attachmentItem.FullName
-                                Destination = $tempFolder
-                                PassThru    = $true
-                                ErrorAction = 'Stop'
-                            }
-
-                            $copiedItem = Copy-Item @params
-
-                            $null = $attachmentList.Add($copiedItem)
-                            #endregion
-                        }
-                        else {
-                            $null = $attachmentList.Add($attachmentItem)
-                        }
+                        $null = $attachmentList.Add($attachmentItem)
 
                         #region Check size of attachments
                         if ($totalSizeAttachments -ge $MaxAttachmentSize) {
@@ -711,9 +688,23 @@ end {
 
                         $attachment = New-Object MimeKit.MimePart
 
-                        $attachment.Content = New-Object MimeKit.MimeContent(
-                            [System.IO.File]::OpenRead($attachmentItem.FullName)
-                        )
+                        #region Create a MemoryStream to hold the file content
+                        $memoryStream = New-Object System.IO.MemoryStream
+
+                        try {
+                            $fileStream = [System.IO.File]::OpenRead($attachmentItem.FullName)
+                            $fileStream.CopyTo($memoryStream)
+                        }
+                        finally {
+                            if ($fileStream) {
+                                $fileStream.Dispose()
+                            }
+                        }
+
+                        $memoryStream.Position = 0
+                        #endregion
+
+                        $attachment.Content = New-Object MimeKit.MimeContent($memoryStream)
 
                         $attachment.ContentDisposition = New-Object MimeKit.ContentDisposition
 
@@ -870,11 +861,18 @@ end {
                 Write-Verbose "Send mail to '$To' with subject '$Subject'"
 
                 $null = $smtp.Send($message)
-                $smtp.Disconnect($true)
-                $smtp.Dispose()
             }
             catch {
                 throw "Failed to send email to '$To': $_"
+            }
+            finally {
+                if ($smtp) {
+                    $smtp.Disconnect($true)
+                    $smtp.Dispose()
+                }
+                if ($message) {
+                    $message.Dispose()
+                }
             }
         }
     }
